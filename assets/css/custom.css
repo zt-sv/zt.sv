@@ -1,0 +1,25 @@
+html.dark .author .author-avatar {
+    border-color: white;
+}
+.author .author-avatar {
+    width: 200px;
+    height: 200px;
+    border-radius: 25%;
+    border: 5px #0d122b solid;
+}
+
+.lang-list {
+    background: transparent;
+    border: none;
+    color: #0d122b;
+    line-height: 2.25;
+    text-decoration: none;
+    padding: .3rem .5rem;
+    opacity: .7;
+    letter-spacing: .015rem;
+    font-size: 16px;
+}
+
+html.dark .lang-list {
+    color: #eaeaea;
+}

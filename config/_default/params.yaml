@@ -1,0 +1,27 @@
+---
+dateFormat: "January 2, 2006"
+
+socialIcons:
+  - name: github
+    url: https://github.com/zt-sv
+  - name: RSS
+    url: /index.xml
+
+sitename: Aleksandr Zaytsev | ztsv
+defaultColor: dark
+mainSections:
+  - posts
+
+author:
+  avatar: author.png
+  name: Aleksandr Zaytsev
+  intro: Aleksandr Zaytsev | ztsv
+  description: K8s, split-keyboards, IaC and something else
+
+webmanifest:
+  name: zt.sv
+  short_name: zt.sv
+  theme_color: "#434648"
+  background_color: "#ffffff"
+  display: standalone
+  start_url: /

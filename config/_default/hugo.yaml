@@ -1,0 +1,7 @@
+---
+baseURL: https://zt.sv/
+languageCode: en-us
+defaultContentLanguage: en
+title: Aleksandr Zaytsev | ztsv's blog
+contentDir: content/en
+defaultContentLanguageInSubdir: false

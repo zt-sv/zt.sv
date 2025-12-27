@@ -1,0 +1,6 @@
+---
+main:
+  - identifier: "menu.about"
+    url: /about/
+    pageRef: about
+    name: About

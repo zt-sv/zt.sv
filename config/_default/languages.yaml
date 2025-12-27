@@ -1,0 +1,20 @@
+---
+en:
+  disabled: false
+  languageCode: en-us
+  languageDirection: ltr
+  languageName: 🇺🇸
+  weight: 1
+ru-ru:
+  disabled: false
+  languageCode: ru-ru
+  languageDirection: ltr
+  languageName: 🇷🇺
+  weight: 2
+  params:
+    dateFormat: "2 January 2006"
+    author:
+      name: Александр Зайцев
+      intro: Александр Зайцев | ztsv
+      description: K8s, сплит-клавиатуры, IaC и всякая всячина
+  contentDir: content/ru
