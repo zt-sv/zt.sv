@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Aleksandr Zaytsev | ztsv's blog</title><link>https://zt.sv/ru-ru/posts/</link><description>Recent content in Posts on Aleksandr Zaytsev | ztsv's blog</description><generator>Hugo -- gohugo.io</generator><language>ru-ru</language><lastBuildDate>Sun, 28 Dec 2025 22:20:36 +0300</lastBuildDate><atom:link href="https://zt.sv/ru-ru/posts/index.xml" rel="self" type="application/rss+xml"/><item><title>От идеи к публикации: как я построил этот блог</title><link>https://zt.sv/ru-ru/posts/first/</link><pubDate>Sun, 28 Dec 2025 22:20:36 +0300</pubDate><guid>https://zt.sv/ru-ru/posts/first/</guid><description>&lt;p&gt;Привет! Я рад представить вам первый пост моего блога - и логично, что он будет посвящён самому блогу. Здесь я расскажу
+о том, как я настроил статический сайт на Hugo, развернул его на GitHub Pages и настроил автоматический деплой через
+GitHub Actions.&lt;/p&gt;
+&lt;p&gt;Этот пост одновременно служит руководством для тех, кто хочет сделать что-то подобное, и документацией для меня самого,
+чтобы не потеряться в собственных конфигурациях через пару месяцев.&lt;/p&gt;
+&lt;h1 id="почему-hugo--github-pages"&gt;Почему Hugo + GitHub Pages?&lt;/h1&gt;
+&lt;p&gt;Перед тем как рассказать о технических деталях, пару слов о выборе инструментов.&lt;/p&gt;</description></item></channel></rss>
