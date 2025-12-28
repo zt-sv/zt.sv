@@ -1,2 +1,4 @@
+- id: "menu.blog"
+  translation: "Blog"
 - id: "menu.about"
   translation: "About"

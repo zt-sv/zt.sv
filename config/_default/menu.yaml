@@ -1,6 +1,14 @@
 ---
 main:
+  - identifier: "menu.blog"
+    url: /blog/
+    pageRef: posts
+    name: Posts
+    weight: 20
+
   - identifier: "menu.about"
     url: /about/
     pageRef: about
     name: About
+    weight: 30
+
