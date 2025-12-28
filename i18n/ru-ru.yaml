@@ -1,2 +1,4 @@
+- id: "menu.blog"
+  translation: "Блог"
 - id: "menu.about"
   translation: "Обо мне"
