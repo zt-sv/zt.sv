@@ -2,6 +2,28 @@
 date = '2025-12-28T22:20:36+03:00'
 draft = false
 title = 'From Idea to Publication: How I Built This Blog'
+keywords = [
+    "hugo",
+    "static site generator",
+    "GitHub Pages",
+    "GitHub Actions",
+    "continuous deployment",
+    "CI/CD",
+    "Git",
+    "Cloudflare",
+    "custom domain",
+    "CNAME",
+    "hugo-blog-awesome",
+    "i18n",
+    "multilingual blog",
+    "markdown",
+    "CSS",
+    "statically generated blog",
+    "dev blog"
+]
+modified = '2025-12-31T15:41:36+03:00'
+description = 'How to set up a static site with Hugo, deployed it on GitHub Pages, and configured automatic deployment using GitHub Actions'
+images = ['author.png']
 +++
 
 Hi! I'm happy to introduce the first post in my blog - and it's about the blog itself. Here, I'm going to talk
@@ -375,7 +397,7 @@ git push
 
 I use Cloudflare as my DNS provider, so I've added the IP addresses
 from [the GitHub documentation page](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site#configuring-an-apex-domain)
-to the Cloudflare dashboard. I've added `A` and `AAAA` records for both the root domain and `www` subdomain.
+to the Cloudflare dashboard. I've added `A` and `AAAA` records for root domain and `CNAME` record for `www` subdomain.
 
 ![Cloudflare DNS management](posts/first/06.png)
 
