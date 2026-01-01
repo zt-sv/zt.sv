@@ -2,6 +2,35 @@
 date = '2025-12-28T22:20:36+03:00'
 draft = false
 title = 'От идеи к публикации: как я построил этот блог'
+keywords = [
+    "hugo",
+    "static site generator",
+    "статический сайт",
+    "блог на Hugo",
+    "GitHub Pages",
+    "GitHub Actions",
+    "автоматический деплой",
+    "continuous deployment",
+    "CI/CD",
+    "Git",
+    "Cloudflare",
+    "custom domain",
+    "CNAME",
+    "hugo-blog-awesome",
+    "многоязычный сайт",
+    "i18n",
+    "multilingual blog",
+    "markdown",
+    "настройка темы",
+    "кастомизация шаблонов",
+    "CSS",
+    "statically generated blog",
+    "dev blog",
+    "технический блог"
+]
+modified = '2025-12-31T15:41:36+03:00'
+description = 'Как настроить статический сайт на Hugo, развернуть его на GitHub Pages и настроить автоматический деплой через GitHub Actions'
+images = ['author.png']
 +++
 
 Привет! Я рад представить вам первый пост моего блога - и логично, что он будет посвящён самому блогу. Здесь я расскажу
@@ -376,7 +405,7 @@ git push
 
 Я использую Cloudflare в качестве DNS-провайдера, поэтому внёс
 IP-адреса [со страницы документации GitHub](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site#configuring-an-apex-domain)
-в личный кабинет Cloudflare. Я добавил `A` и `AAAA` записи для основного домена и поддомена `www`.
+в личный кабинет Cloudflare. Я добавил `A` и `AAAA` записи для основного домена и `CNAME` запись поддомена `www`.
 
 ![Cloudflare DNS management](posts/first/06.png)
 
