@@ -1,6 +1,7 @@
 html.dark .author .author-avatar {
     border-color: white;
 }
+
 .author .author-avatar {
     width: 200px;
     height: 200px;
@@ -22,4 +23,105 @@ html.dark .author .author-avatar {
 
 html.dark .lang-list {
     color: #eaeaea;
+}
+
+.collapsibleHighlight {
+    position: relative;
+}
+
+.collapsibleHighlight_toggle {
+    display: none;
+}
+
+.collapsibleHighlight_label::after {
+    content: "Less";
+}
+
+.collapsibleHighlight_toggle:checked ~ .collapsibleHighlight_label::after {
+    content: "More";
+}
+
+.collapsibleHighlight_toggle:checked ~ .collapsibleHighlight_copy {
+    top: 17px;
+}
+
+.collapsibleHighlight_toggle:checked ~ .collapsibleHighlight_wrapper {
+    max-height: 300px;
+    overflow: hidden;
+}
+
+.collapsibleHighlight_wrapper {
+    max-height: max-content;
+}
+
+.collapsibleHighlight_toggle ~ .collapsibleHighlight_wrapper pre {
+    padding-bottom: 35px;
+}
+
+.collapsibleHighlight_code {
+    display: none;
+}
+
+.collapsibleHighlight_label {
+    height: 35px;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(34, 36, 49, 0) 0%, rgb(77, 77, 77) 100%);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    color: #babbf1;
+    cursor: pointer;
+}
+
+.collapsibleHighlight_copy {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    background-color: #4d5066;
+    padding: 3px;
+    border-radius: 4px;
+    user-select: none;
+    color: #babbf1;
+    display: flex;
+    cursor: pointer;
+}
+
+.collapsibleHighlight_copy:hover {
+    color: #d2d3f5;
+    background-color: #585b6e;
+}
+
+.collapsibleHighlight_lang {
+    position: absolute;
+    right: 7px;
+    bottom: 7px;
+    background-color: #4d5066;
+    padding: 0 0.3em;
+    border-radius: 4px;
+    user-select: none;
+    color: #babbf1;
+    font-family: Consolas, monospace;
+    text-rendering: optimizeLegibility;
+    z-index: 2;
+    font-size: 12px;
+}
+
+@media print {
+    .collapsibleHighlight_copy, .collapsibleHighlight_lang, .collapsibleHighlight_label {
+        display: none;
+    }
+
+    .collapsibleHighlight_toggle:checked ~ .collapsibleHighlight_wrapper {
+        max-height: max-content;
+    }
+}
+.window {
+    box-shadow: none;
+    width: 100%;
+    max-width: none;
+    margin: 10px auto;
+}
+.window .terminal {
+    color: rgb(186, 189, 196);
+    font-size: inherit;
 }
