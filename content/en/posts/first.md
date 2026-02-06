@@ -69,15 +69,15 @@ The combination of these three tools gives me:
 The official [documentation](https://gohugo.io/installation/) describes multiple installation methods for popular
 operating systems. I'm using Homebrew package manager on macOS, so it's simple for me:
 
-```bash
-brew install hugo
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv" >}}
+$ brew install hugo
+{{< /terminal >}}
 
 Let's verify that Hugo is installed successfully:
 
-```bash
-hugo version
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv" >}}
+$ hugo version
+{{< /terminal >}}
 
 The command outputs the installed Hugo version. In my case:
 `hugo v0.153.2+extended+withdeploy darwin/amd64 BuildDate=2025-12-22T16:53:01Z VendorInfo=Homebrew`.
@@ -86,13 +86,14 @@ The command outputs the installed Hugo version. In my case:
 
 Let's create a new project:
 
-```bash
-hugo new site zt.sv
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv" >}}
+$ hugo new site zt.sv
+{{< /terminal >}}
 
 After running the command, Hugo automatically creates a basic directory structure:
 
-```bash
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv" >}}
+$ tree zt.sv
 zt.sv
 ├── archetypes # Templates for new posts
 │   └── default.md
@@ -104,7 +105,7 @@ zt.sv
 ├── layouts    # Custom HTML templates
 ├── static     # Static files
 └── themes     # Themes
-```
+{{< /terminal >}}
 
 # Step 3: Configuration
 
@@ -123,7 +124,7 @@ zt.sv
 
 Contents of `config/_default/hugo.yaml`:
 
-```yaml
+{{< highlight yaml "linenos=inline" >}}
 ---
 baseURL: https://zt.sv/
 languageCode: en-us
@@ -131,14 +132,14 @@ defaultContentLanguage: en
 title: Aleksandr Zaytsev | ztsv's blog
 contentDir: content/en
 defaultContentLanguageInSubdir: false
-```
+{{< /highlight >}}
 
 I chose the `content/en` path for `contentDir` because I'm going to run the blog in multiple languages and use separate
 directories for each one. This directory needs to be created manually:
 
-```bash
-mkdir -p content/en
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ mkdir -p content/en
+{{< /terminal >}}
 
 # Step 4: Installing a Theme
 
@@ -147,30 +148,30 @@ There are many [themes](https://themes.gohugo.io/) available for Hugo, but I cho
 
 We'll install the theme as a module, so first we initialize the project as a Hugo module:
 
-```bash
-hugo mod init github.com/zt-sv/zt.sv
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ hugo mod init github.com/zt-sv/zt.sv
+{{< /terminal >}}
 
 Next, add a configuration file specifying the theme in `config/_default/module.yaml`:
 
-```yaml
+{{< highlight yaml "linenos=inline" >}}
 ---
 imports:
   - path: github.com/hugo-sid/hugo-blog-awesome
-```
+{{< /highlight >}}
 
 Install the theme as a dependency:
 
-```bash
-hugo mod vendor
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ hugo mod vendor
+{{< /terminal >}}
 
 After that, you can start Hugo's built-in local server and make sure everything works fine by opening
 `http://localhost:1313/`:
 
-```bash
-hugo server
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ hugo server
+{{< /terminal >}}
 
 ![First run](posts/first/01.png)
 
@@ -183,7 +184,7 @@ in the theme repository.
 
 Let's add a configuration file with parameters in `config/_default/params.yaml`:
 
-```yaml
+{{< highlight yaml "linenos=inline" >}}
 ---
 dateFormat: "January 2, 2006"
 
@@ -211,7 +212,7 @@ webmanifest:
   background_color: "#ffffff"
   display: standalone
   start_url: /
-```
+{{< /highlight >}}
 
 Add `author.png` to the `assets` directory. Additionally, I've generated a set of favicons for the site
 using [realfavicongenerator.net](https://realfavicongenerator.net/) and placed them in the `assets/icons` directory:
@@ -236,7 +237,7 @@ have to add a language selection feature.
 The `hugo-blog-awesome` theme supports multilingual mode out of the box, so it's enough to define locales in
 `config/_default/languages.yaml`. You can also override individual parameters for each language:
 
-```yaml
+{{< highlight yaml "linenos=inline" >}}
 ---
 en:
   disabled: false
@@ -257,7 +258,7 @@ ru-ru:
       intro: Aleksandr Zaytsev | ztsv
       description: K8s, split keyboards, IaC, and all sorts of things
   contentDir: content/ru
-```
+{{< /highlight >}}
 
 After that, a language selector appears on the site:
 
@@ -279,7 +280,7 @@ To use custom styles, I add `layouts/partials/custom-head.html` with the followi
 
 And add the corresponding file `assets/css/custom.css`:
 
-```css
+{{< highlight css "linenos=inline" >}}
 html.dark .author .author-avatar {
     border-color: white;
 }
@@ -306,7 +307,7 @@ html.dark .author .author-avatar {
 html.dark .lang-list {
     color: #eaeaea;
 }
-```
+{{< /highlight >}}
 
 After these changes, the site looks like this:
 
@@ -317,27 +318,27 @@ After these changes, the site looks like this:
 To add the main menu to the site, you need to create the file `config/_default/menu.yaml`. For now, I'll only add the
 "About" item to the main menu:
 
-```yaml
+{{< highlight yaml "linenos=inline" >}}
 ---
 main:
   - identifier: "menu.about"
     url: /about/
     pageRef: about
-```
+{{< /highlight >}}
 
 The `identifier` field allows specifying translations for different languages. Therefore, we add
 `i18n/en.yaml` and `i18n/ru-ru.yaml`, assigning a translation to each identifier:
 
-```yaml
+{{< highlight yaml "linenos=inline" >}}
 - id: "menu.about"
   translation: "About"
-```
+{{< /highlight >}}
 
 And create the page itself:
 
-```bash
-hugo new pages/about.md
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ hugo new pages/about.md
+{{< /terminal >}}
 
 This command creates the file `pages/about.md` from the `archetypes/default.md` template in the default content
 directory (the `contentDir` parameter in `hugo.yaml`).
@@ -346,18 +347,18 @@ directory (the `contentDir` parameter in `hugo.yaml`).
 
 Initialize a local Git repository:
 
-```bash
-git init
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ git init
+{{< /terminal >}}
 
 And configure the `.gitignore` file:
 
-```gitignore
+{{< highlight gitignore "linenos=inline" >}}
 _vendor/
 public/
 resources/
 .hugo_build.lock
-```
+{{< /highlight >}}
 
 After that, create a repository on [GitHub](https://github.com). When creating the repository, I skip the automatic
 addition of `README.md`, `.gitignore`, and the license file.
@@ -366,18 +367,18 @@ addition of `README.md`, `.gitignore`, and the license file.
 
 Make the first commit:
 
-```bash
-git add .
-git branch -M main
-git commit -m "Initial commit"
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ git add .
+$ git branch -M main
+$ git commit -m "Initial commit"
+{{< /terminal >}}
 
 Specify the remote repository and push changes to GitHub:
 
-```bash
-git remote add origin git@github.com:zt-sv/zt.sv.git
-git push -u origin main
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ git remote add origin git@github.com:zt-sv/zt.sv.git
+$ git push -u origin main
+{{< /terminal >}}
 
 # Step 10: Custom Domain
 
@@ -389,11 +390,11 @@ zt.sv
 
 And commit it:
 
-```bash
-git add CNAME
-git commit -m "Create CNAME"
-git push
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ git add CNAME
+$ git commit -m "Create CNAME"
+$ git push
+{{< /terminal >}}
 
 I use Cloudflare as my DNS provider, so I've added the IP addresses
 from [the GitHub documentation page](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site#configuring-an-apex-domain)
@@ -411,7 +412,7 @@ the `gh-pages` branch as the source.
 For automatic build and deployment, I use GitHub Actions, so I create the file
 `.github/workflows/deploy.yml`:
 
-```yaml
+{{< highlight yaml "linenos=inline" >}}
 name: Deploy Hugo site
 
 on:
@@ -446,7 +447,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-```
+{{< /highlight >}}
 
 This workflow:
 
@@ -465,11 +466,11 @@ allow read and write permissions for workflows.
 
 Push the changes to GitHub:
 
-```bash
-git add .github/workflows/deploy.yml
-git commit -m "Build and deploy Hugo site"
-git push
-```
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/zt.sv" >}}
+$ git add .github/workflows/deploy.yml
+$ git commit -m "Build and deploy Hugo site"
+$ git push
+{{< /terminal >}}
 
 # What's Next?
 

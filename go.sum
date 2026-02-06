@@ -1,2 +1,4 @@
 github.com/hugo-sid/hugo-blog-awesome v1.21.0 h1:cxoeQgJePACmvPKqodDCLyme3iVAeGHm/l+iqyntGL4=
 github.com/hugo-sid/hugo-blog-awesome v1.21.0/go.mod h1:3XVERF66wgQpTsruOajS5Swr+uvyTzov1acafNaqm1E=
+github.com/jiridj/hugo-macos-terminal v0.0.0-20240115120627-cc6bbb3cc09a h1:e6yltQ+D81xhLw6dNl5SdDVn0xY8y+hpN+TUZ54Dtkk=
+github.com/jiridj/hugo-macos-terminal v0.0.0-20240115120627-cc6bbb3cc09a/go.mod h1:FkJ4M2mK0wRuW9dQoK8AEIeypJu/giekMGk0LzAi4io=

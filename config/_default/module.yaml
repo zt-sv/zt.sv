@@ -1,3 +1,9 @@
 ---
 imports:
   - path: github.com/hugo-sid/hugo-blog-awesome
+  - path: github.com/jiridj/hugo-macos-terminal
+    mounts:
+      - source: static/css
+        target: assets/css
+      - source: layouts/shortcodes
+        target: layouts/shortcodes
