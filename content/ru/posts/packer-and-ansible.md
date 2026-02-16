@@ -5,20 +5,22 @@ title = 'Сборка базового образа виртуальной ма�
 keywords = [
 "Packer",
 "Ansible",
-"VMWare",
+"VMware",
 "Rocky",
 "Linux",
 "Hashicorp",
-"CIS Benchmark"
+"CIS Benchmark",
+"автоматизация",
+"DevOps"
 ]
-description = 'Как автоматизировать сборку образа виртуальной машины на примере Rocky Linux с использованием Packer и Ansible для VMware с учётом CIS Benchmark'
+description = 'Автоматизация сборки образа виртуальной машины на примере Rocky Linux с использованием Packer и Ansible для VMware с учётом CIS Benchmark'
 images = ['author.png']
 toc = true
 +++
 
 Представьте ситуацию: вам нужно развернуть новую виртуальную машину для разработки или тестирования. Вы начинаете с
 чистого образа дистрибутива, устанавливаете необходимые пакеты, настраиваете сеть, применяете политики безопасности -
-это займет большое количество времени. Выполнить такую операцию единожды можно. Но что если одинаковых машин нужно
+это займет значительное время. Выполнить такую операцию единожды можно. Но что если одинаковых машин нужно
 много? А если спустя время в первоначальной конфигурации нужно внести небольшие изменения?
 Ответы на эти вопросы дают Packer и Ansible.
 
@@ -28,10 +30,10 @@ Ansible, в контексте Packer, будет поставлять и кон
 
 В данном гайде будет рассмотрена сборка виртуальной машины при помощи Packer и последующее конфигурирование посредством Ansible.
 
-## Rocky Linux для VMWare
+## Rocky Linux для VMware
 
-Представим что поставлена задача: необходимо подготовить базовый образ на Rocky Linux, из которого будут
-разворачиваться виртуальные машины в частном облаке на базе VMWare Cloud Director (VCD).
+Представим, что поставлена задача: необходимо подготовить базовый образ на Rocky Linux, из которого будут
+разворачиваться виртуальные машины в частном облаке на базе VMware Cloud Director (VCD).
 
 Требования к шаблону:
 
@@ -46,7 +48,7 @@ Ansible, в контексте Packer, будет поставлять и кон
 
 * [Hashicorp Packer](https://developer.hashicorp.com/packer/install);
 * [Ansible](https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html);
-* Один из [VMWare desktop hypervisors](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion);
+* Один из [VMware desktop hypervisors](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion);
 * [VMware OVFTool](https://customerconnect.vmware.com/downloads/get-download?downloadGroup=OVFTOOL441);
 * [Python](https://www.python.org/downloads/).
 
@@ -55,7 +57,7 @@ Ansible, в контексте Packer, будет поставлять и кон
 При запуске команды `packer build` Packer считывает все `*.pkr.hcl` файлы в директории запуска и объединяет их в единую
 конфигурацию. Это позволяет разделить конфигурацию на файлы, для повышения читаемости и дальнейшего сопровождения.
 Поэтому для шаблона Packer создаем отдельную директорию Rocky, а конфигурацию шаблона разбиваем на отдельные файлы.
-Все что касается Ansible вынесем в отдельную директорию.
+Все, что касается Ansible, вынесем в отдельную директорию.
 
 {{< terminal "ztsv@mac" "~/src/github.com/zt-sv" >}}
 $ tree packer-templates 
@@ -118,7 +120,7 @@ fact_caching = memory
 
 Для сборки шаблона потребуются плагины:
 
-* [VMware](https://developer.hashicorp.com/packer/integrations/vmware/vmware/) - билдеры для гипервизиоров VMWare;
+* [VMware](https://developer.hashicorp.com/packer/integrations/vmware/vmware/) - билдеры для гипервизиоров VMware;
 * [Ansible](https://developer.hashicorp.com/packer/integrations/hashicorp/ansible) - запуск Ansible плейбуков из Packer;
 * [Git](https://developer.hashicorp.com/packer/integrations/ethanmdavidson/git) - получение информации из git.
 
@@ -151,13 +153,15 @@ packer {
 $ packer init rocky
 {{< /terminal >}}
 
-### VMWare ISO Builder
+### VMware ISO Builder
 
-Виртуальную машину будет создаваться из ISO-файла, поэтому в качестве билдера
+Виртуальная машина будет создаваться из ISO-файла, поэтому в качестве билдера
 используется [VMware ISO](https://developer.hashicorp.com/packer/integrations/hashicorp/vmware/latest/components/builder/iso).
 С его помощью будет создан образ в `ova` формате, который можно импортировать в VCD.
 
-Для версионирования образа используем текущую дату и hash коммита.
+Для версионирования образа используем текущую дату и hash коммита - для этого используется git плагин.
+Это позволит понять когда именно и из какого коммита был собран образ. 
+
 
 Всю конфигурацию билдера опишем в файле `rocky/source.pkr.hcl`.
 
@@ -253,9 +257,9 @@ source "vmware-iso" "golden-image" {
 зависит от версии используемого гипервизора. Информацию о поддерживаемых версиях можно найти в
 статье "[Virtual machine hardware versions](https://knowledge.broadcom.com/external/article?articleNumber=315655)".
 
-Так же необходимо выставить корректный `guest_os_type`. Данный параметр определяет тип операционной системы внутри
-виртуальной машины и играет важную роль в производительности и оптимальной работе гипервизора и VMWare Tools с такой
-виртуальной машиной. Доступные варианты можно найти
+Также необходимо выставить корректный `guest_os_type`. Данный параметр определяет тип операционной системы внутри
+виртуальной машины и играет важную роль в производительности и оптимальной работе гипервизора и VMware Tools с такой
+виртуальной машиной. Доступные варианты можно найти в
 статье "[Determine the guest OS from a VM configuration file](https://knowledge.broadcom.com/external/article?articleNumber=321876)".
 
 ### Kickstart
@@ -384,8 +388,8 @@ reboot --eject
 
 ### Блок build
 
-Определение какие именно билдеры должны быть запущены, а так же provision скрипты и post-processing операции, которые
-должны быть выполнены - все это описывается в блоке конфигурации `build`.
+В блоке `build` определяется, какие билдеры будут запущены, какие provision-скрипты выполнены и какие post-processing
+операции применены.
 В данном сценарии используется всего один билдер - `vmware-iso.golden-image`.
 
 Перед экспортом образа выполняется Ansible плейбук. При его помощи виртуальная машина будет
@@ -746,32 +750,32 @@ variable "guest_timezone" {
 
 {{< terminal "ztsv@mac" "~/src/github.com/zt-sv/packer-templates" >}}
 $ packer build \
-    -var "provisioner_password=123" \
+    -var "provisioner_password=REPLACE_ME" \
     rocky
 {{< /terminal >}}
 
 Данная команда прочитает все `*.hcl` файлы в директории `rocky` и склеит их в единую конфигурацию.
 
 После успешного выполнения в директории `artifacts` будет собранный образ виртуальной машины на Rocky 9.7 в
-формате `ova`, который можно импортировать в VMWare Cloud Director или запустить в любом другом гипервизоре VMWare.
+формате `ova`, который можно импортировать в VMware Cloud Director или запустить в любом другом гипервизоре VMware.
 
 Если требуется собрать другую версию Rocky, достаточно изменить значение переменной `rocky_version` и, при необходимости,
 `vmware_guest_os_type`. Пример для Rocky 8.10:
 
 {{< terminal "ztsv@mac" "~/src/github.com/zt-sv/packer-templates" >}}
 $ packer build \
-    -var "provisioner_password=123" \
+    -var "provisioner_password=REPLACE_ME" \
     -var "rocky_version=8.10" \
     -var "vmware_guest_os_type=rhel8_64Guest" \
     rocky
 {{< /terminal >}}
 
 Более ранние версии Rocky переезжают в архив, поэтому если нам требуется собрать, например, версию Rocky 9.4, необходимо
-так же передать адрес архивного репозитория в переменную `rocky_repository_url`:
+также передать адрес архивного репозитория в переменную `rocky_repository_url`:
 
 {{< terminal "ztsv@mac" "~/src/github.com/zt-sv/packer-templates" >}}
 $ packer build \
-    -var "provisioner_password=123" \
+    -var "provisioner_password=REPLACE_ME" \
     -var "rocky_version=9.4" \
     -var "rocky_repository_url=https://dl.rockylinux.org/vault/rocky" \
     rocky
@@ -786,6 +790,6 @@ $ packer build \
 Достаточно будет внести изменения в код шаблона и запустить Packer.
 
 На этом фундаменте можно:
-* выполнять сборку под другие гипервизоры;
-* выполнять последующую упаковку шаблонов в Vagrant Box;
-* собирать другие операционные системы.
+* Собирать образы под другие гипервизоры;
+* Выполнять последующую упаковку шаблонов в Vagrant Box;
+* Масштабировать на другие ОС.
