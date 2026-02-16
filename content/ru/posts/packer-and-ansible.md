@@ -6,10 +6,8 @@ keywords = [
 "Packer",
 "Ansible",
 "VMWare",
-"Virtualbox",
 "Rocky",
 "Linux",
-"Vagrant",
 "Hashicorp",
 "CIS Benchmark"
 ]
@@ -28,31 +26,36 @@ HashiCorp Packer — инструмент для автоматизирован�
 создавать и конфигурировать ВМ, весь процесс описывается кодом.
 Ansible, в контексте Packer, будет поставлять и конфигурировать программное обеспечение в создаваемых шаблонах.
 
-В данном гайде я рассмотрю несколько вариантов сборки виртуальных машин, постепенно увеличивая требования и сложность.
-Для повторения примеров вам понадобятся установленные инструменты:
-
-* [Hashicorp Packer](https://developer.hashicorp.com/packer/install);
-* [Hashicorp Vagrant](https://developer.hashicorp.com/vagrant/install);
-* [Ansible](https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html) - рекомендую
-  устанавливать через `pip` в изолированный `venv`;
-* Один из [VMWare desktop hypervisors](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion);
-* [VMware OVFTool](https://customerconnect.vmware.com/downloads/get-download?downloadGroup=OVFTOOL441);
-* [VirtualBox](https://www.virtualbox.org/manual/topics/installation.html#installation);
-* [Python](https://www.python.org/downloads/).
+В данном гайде будет рассмотрена сборка виртуальной машины при помощи Packer и последующее конфигурирование посредством Ansible.
 
 ## Rocky Linux для VMWare
 
-Представим что поставлена задача: необходимо подготовить базовый образ на Rocky Linux 9, из которого будут
-разворачиваться
-виртуальные машины в частном облаке на базе VMWare Cloud Director (VCD).
+Представим что поставлена задача: необходимо подготовить базовый образ на Rocky Linux, из которого будут
+разворачиваться виртуальные машины в частном облаке на базе VMWare Cloud Director (VCD).
 
 Требования к шаблону:
 
 * соответствие [CIS Benchmark](https://www.cisecurity.org/cis-benchmarks);
 * предустановленный [Prometheus Node Exporter](https://prometheus.io/docs/guides/node-exporter/);
-* возможность повторяемой сборки и версионирования.
+* возможность собирать 8 и 9 версии Rocky;
+* возможность повторяемой сборки.
 
-Создаем структуру проекта:
+### Инструменты
+
+Для решения данной задачи понадобятся инструменты:
+
+* [Hashicorp Packer](https://developer.hashicorp.com/packer/install);
+* [Ansible](https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html);
+* Один из [VMWare desktop hypervisors](https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion);
+* [VMware OVFTool](https://customerconnect.vmware.com/downloads/get-download?downloadGroup=OVFTOOL441);
+* [Python](https://www.python.org/downloads/).
+
+### Структура проекта
+
+При запуске команды `packer build` Packer считывает все `*.pkr.hcl` файлы в директории запуска и объединяет их в единую
+конфигурацию. Это позволяет разделить конфигурацию на файлы, для повышения читаемости и дальнейшего сопровождения.
+Поэтому для шаблона Packer создаем отдельную директорию Rocky, а конфигурацию шаблона разбиваем на отдельные файлы.
+Все что касается Ansible вынесем в отдельную директорию.
 
 {{< terminal "ztsv@mac" "~/src/github.com/zt-sv" >}}
 $ tree packer-templates 
@@ -74,9 +77,9 @@ packer-templates
 
 ### Установка Ansible
 
-Ansible удобнее всего устанавливать через pip в изолированное виртуальное окружение проекта.
+Ansible удобнее всего устанавливать через `pip` в изолированное виртуальное окружение проекта.
 
-Если планируется сборка образов Rocky 8, необходимо учитывать, что в этой версии используется Python 3.6, который
+Поставленная задача требует сборки образов на Rocky 8. Необходимо учитывать, что в этой версии используется Python 3.6, который
 несовместим с новыми версиями [ansible-core](https://pypi.org/project/ansible-core). В этом случае следует использовать
 Ansible версии < 2.17.
 
@@ -111,18 +114,7 @@ gathering = smart
 fact_caching = memory
 {{< /highlight >}}
 
-### Шаблон Packer
-
-При запуске команды `packer build` Packer считывает все `*.pkr.hcl` файлы в директории запуска и объединяет их в единую
-конфигурацию. Это позволяет разделить конфигурацию на файлы, для повышения читаемости и дальнейшего сопровождения.
-Каждый шаблон Packer состоит как минимум из трех блоков:
-
-* `packer` - блок конфигурации Packer и зависимостей;
-* `source` - определяет конфигурацию билдеров образов;
-* `build` - определяет какие именно сборщики должны быть запущены, как должны быть сконфигурированы и какие действия
-  после сборки должны быть выполнены для получения конечного образа.
-
-#### Определение и установка зависимостей Packer
+### Определение и установка зависимостей Packer
 
 Для сборки шаблона потребуются плагины:
 
@@ -159,7 +151,7 @@ packer {
 $ packer init rocky
 {{< /terminal >}}
 
-#### VMWare ISO Builder
+### VMWare ISO Builder
 
 Виртуальную машину будет создаваться из ISO-файла, поэтому в качестве билдера
 используется [VMware ISO](https://developer.hashicorp.com/packer/integrations/hashicorp/vmware/latest/components/builder/iso).
@@ -266,7 +258,7 @@ source "vmware-iso" "golden-image" {
 виртуальной машиной. Доступные варианты можно найти
 статье "[Determine the guest OS from a VM configuration file](https://knowledge.broadcom.com/external/article?articleNumber=321876)".
 
-#### Kickstart
+### Kickstart
 
 Для автоматической установки и конфигурации ОС
 используется [kickstart](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/automatically_installing_rhel/starting-kickstart-installations_rhel-installer)
@@ -390,7 +382,7 @@ sed -i "s/^.*requiretty/#Defaults requiretty/" /etc/sudoers
 reboot --eject
 {{< /highlight >}}
 
-#### Блок build
+### Блок build
 
 Определение какие именно билдеры должны быть запущены, а так же provision скрипты и post-processing операции, которые
 должны быть выполнены - все это описывается в блоке конфигурации `build`.
@@ -426,7 +418,7 @@ build {
 }
 {{< /highlight >}}
 
-#### Блок переменных
+### Блок переменных
 
 Все переменные, которые будут использованы для сборки шаблона, определяем в файле `rocky/variables.pkr.hcl`. Большей
 части переменных задаем значение по-умолчанию. Это позволит запускать сборку, не определяя огромное количество переменных. При этом остается возможность гибкой настройки шаблона.
@@ -748,7 +740,7 @@ variable "guest_timezone" {
 }
 {{< /highlight >}}
 
-### Запуск сборки
+## Запуск сборки
 
 Для запуска сборки достаточно только передать значение переменной `provisioner_password`:
 
@@ -774,4 +766,26 @@ $ packer build \
     rocky
 {{< /terminal >}}
 
+Более ранние версии Rocky переезжают в архив, поэтому если нам требуется собрать, например, версию Rocky 9.4, необходимо
+так же передать адрес архивного репозитория в переменную `rocky_repository_url`:
+
+{{< terminal "ztsv@mac" "~/src/github.com/zt-sv/packer-templates" >}}
+$ packer build \
+    -var "provisioner_password=123" \
+    -var "rocky_version=9.4" \
+    -var "rocky_repository_url=https://dl.rockylinux.org/vault/rocky" \
+    rocky
+{{< /terminal >}}
+
 Полный код данного примера доступен в [репозитории](https://github.com/zt-sv/packer-templates).
+
+# Что дальше?
+
+Данный пример позволяет собирать различные версии Rocky и приводить их в соответствие с CIS Benchmark.
+Если выйдет новая версия CIS Benchmark или новая версия Rocky, не придется выполнять сборку шаблона с нуля.
+Достаточно будет внести изменения в код шаблона и запустить Packer.
+
+На этом фундаменте можно:
+* выполнять сборку под другие гипервизоры;
+* выполнять последующую упаковку шаблонов в Vagrant Box;
+* собирать другие операционные системы.
