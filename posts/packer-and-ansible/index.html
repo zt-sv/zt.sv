@@ -1,0 +1,1310 @@
+<!doctype html><html lang=en-us><head><meta charset=utf-8><meta http-equiv=content-type content="text/html"><meta name=viewport content="width=device-width,initial-scale=1"><title itemprop=name>Building a Base Virtual Machine Image with Packer and Ansible | Aleksandr Zaytsev | ztsv's blog</title><meta property="og:title" content="Building a Base Virtual Machine Image with Packer and Ansible | Aleksandr Zaytsev | ztsv's blog"><meta name=twitter:title content="Building a Base Virtual Machine Image with Packer and Ansible | Aleksandr Zaytsev | ztsv's blog"><meta itemprop=name content="Building a Base Virtual Machine Image with Packer and Ansible | Aleksandr Zaytsev | ztsv's blog"><meta name=application-name content="Building a Base Virtual Machine Image with Packer and Ansible | Aleksandr Zaytsev | ztsv's blog"><meta property="og:site_name" content="Aleksandr Zaytsev | ztsv"><meta name=description content="Automating the build of a Rocky Linux virtual machine image using Packer and Ansible for VMware, with CIS Benchmark compliance"><meta itemprop=description content="Automating the build of a Rocky Linux virtual machine image using Packer and Ansible for VMware, with CIS Benchmark compliance"><meta property="og:description" content="Automating the build of a Rocky Linux virtual machine image using Packer and Ansible for VMware, with CIS Benchmark compliance"><meta name=twitter:description content="Automating the build of a Rocky Linux virtual machine image using Packer and Ansible for VMware, with CIS Benchmark compliance"><meta property="og:locale" content="en-us"><meta name=language content="en-us"><link rel=alternate hreflang=en href=https://zt.sv/posts/packer-and-ansible/ title=🇺🇸><link rel=alternate hreflang=ru-ru href=https://zt.sv/ru-ru/posts/packer-and-ansible/ title=🇷🇺><meta property="og:type" content="article"><meta property="og:article:published_time" content=2026-02-26T16:30:16+0300><meta property="article:published_time" content=2026-02-26T16:30:16+0300><meta property="og:url" content="https://zt.sv/posts/packer-and-ansible/"><meta property="og:article:author" content="Aleksandr Zaytsev"><meta property="article:author" content="Aleksandr Zaytsev"><meta name=author content="Aleksandr Zaytsev"><script defer type=application/ld+json>{"@context":"http://schema.org","@type":"Article","headline":"Building a Base Virtual Machine Image with Packer and Ansible","author":{"@type":"Person","name":""},"datePublished":"2026-02-26","description":"Automating the build of a Rocky Linux virtual machine image using Packer and Ansible for VMware, with CIS Benchmark compliance","wordCount":5747,"mainEntityOfPage":"True","dateModified":"2026-02-26","image":{"@type":"imageObject","url":""},"publisher":{"@type":"Organization","name":"Aleksandr Zaytsev | ztsv\u0027s blog"}}</script><meta name=generator content="Hugo 0.153.2"><meta property="og:url" content="https://zt.sv/posts/packer-and-ansible/"><meta property="og:site_name" content="Aleksandr Zaytsev | ztsv's blog"><meta property="og:title" content="Building a Base Virtual Machine Image with Packer and Ansible"><meta property="og:description" content="Automating the build of a Rocky Linux virtual machine image using Packer and Ansible for VMware, with CIS Benchmark compliance"><meta property="og:locale" content="en_us"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2026-02-26T16:30:16+03:00"><meta property="article:modified_time" content="2026-02-26T16:30:16+03:00"><meta property="og:image" content="https://zt.sv/author.png"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://zt.sv/author.png"><meta name=twitter:title content="Building a Base Virtual Machine Image with Packer and Ansible"><meta name=twitter:description content="Automating the build of a Rocky Linux virtual machine image using Packer and Ansible for VMware, with CIS Benchmark compliance"><link rel=canonical href=https://zt.sv/posts/packer-and-ansible/><link href=/style.min.e390ba7da26222f4dc42a349955d76dbbe44e5ce2535a43de5a70633a0a9ec3c.css rel=stylesheet><link href=/code-highlight.min.706d31975fec544a864cb7f0d847a73ea55ca1df91bf495fd12a177138d807cf.css rel=stylesheet><link rel=apple-touch-icon sizes=180x180 href=/icons/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/icons/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/icons/favicon-16x16.png><link rel=mask-icon href=/icons/safari-pinned-tab.svg><link rel="shortcut icon" href=/favicon.ico><link rel=manifest href=https://zt.sv/site.webmanifest><meta name=msapplication-config content="/browserconfig.xml"><meta name=msapplication-TileColor content="#2d89ef"><meta name=theme-color content="#434648"><meta name=color-scheme content="light dark"><link rel=icon type=image/svg+xml href=/icons/favicon.svg><link href=/css/terminal.css rel=stylesheet><link href=/css/custom.css rel=stylesheet></head><body data-theme=dark class=notransition><script src=/js/theme.min.8961c317c5b88b953fe27525839672c9343f1058ab044696ca225656c8ba2ab0.js integrity="sha256-iWHDF8W4i5U/4nUlg5ZyyTQ/EFirBEaWyiJWVsi6KrA="></script><div class=navbar role=navigation><nav class=menu aria-label="Main Navigation"><a href=https://zt.sv/ class=logo><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home"><title>Home</title><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+</a><input type=checkbox id=menu-trigger class=menu-trigger>
+<label for=menu-trigger><span class=menu-icon><svg width="25" height="25" stroke="currentColor" fill="none" viewBox="0 0 14 14"><title>Menu</title><path stroke-linecap="round" stroke-linejoin="round" d="M10.595 7H3.40726"/><path stroke-linecap="round" stroke-linejoin="round" d="M10.5096 3.51488H3.49301"/><path stroke-linecap="round" stroke-linejoin="round" d="M10.5096 10.4851H3.49301"/><path stroke-linecap="round" stroke-linejoin="round" d="M.5 12.5V1.5c0-.552285.447715-1 1-1h11C13.0523.5 13.5.947715 13.5 1.5v11C13.5 13.0523 13.0523 13.5 12.5 13.5H1.5C.947715 13.5.5 13.0523.5 12.5z"/></svg></span></label><div class=trigger><ul class=trigger-container><li><a class="menu-link active" href=/posts/>Blog</a></li><li><a class=menu-link href=/pages/about/>About</a></li><li class=menu-separator><span>|</span></li><li><select aria-label="Select Language" class=lang-list id=select-language onchange="location=this.value"><option id=en value=https://zt.sv/posts/packer-and-ansible/ selected>🇺🇸</option><option id=ru-ru value=https://zt.sv/ru-ru/posts/packer-and-ansible/>🇷🇺</option></select></li><li class=menu-separator><span>|</span></li></ul><a id=mode href=#><svg class="mode-sunny" width="21" height="21" viewBox="0 0 14 14" stroke-width="1"><title>LIGHT</title><g><circle cx="7" cy="7" r="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="7" y1=".5" x2="7" y2="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="2.4" y1="2.4" x2="3.82" y2="3.82" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1=".5" y1="7" x2="2.5" y2="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="2.4" y1="11.6" x2="3.82" y2="10.18" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="7" y1="13.5" x2="7" y2="11.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="11.6" y1="11.6" x2="10.18" y2="10.18" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="13.5" y1="7" x2="11.5" y2="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="11.6" y1="2.4" x2="10.18" y2="3.82" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
+<svg class="mode-moon" width="21" height="21" viewBox="0 0 14 14" stroke-width="1"><title>DARK</title><g><circle cx="7" cy="7" r="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="7" y1=".5" x2="7" y2="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="2.4" y1="2.4" x2="3.82" y2="3.82" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1=".5" y1="7" x2="2.5" y2="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="2.4" y1="11.6" x2="3.82" y2="10.18" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="7" y1="13.5" x2="7" y2="11.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="11.6" y1="11.6" x2="10.18" y2="10.18" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="13.5" y1="7" x2="11.5" y2="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/><line x1="11.6" y1="2.4" x2="10.18" y2="3.82" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></svg></a></div></nav></div><div class="wrapper post"><main class=page-content aria-label=Content><article><header class=header><h1 class=header-title>Building a Base Virtual Machine Image with Packer and Ansible</h1><div class=post-meta><time datetime=2026-02-26T16:30:16+03:00 itemprop=datePublished>February 26, 2026</time></div></header><div class=page-content><p>Imagine a scenario: you need to deploy a new virtual machine for development or testing. You start with a clean distribution image, install the necessary packages, configure the network, and apply security policies — this takes a significant amount of time. Doing this once is manageable. But what if you need many identical machines? And what if, over time, you need to make slight adjustments to the initial configuration?
+Packer and Ansible provide the answers to these questions.</p><p>HashiCorp Packer is a tool for automated virtual machine image building. Instead of manually creating and configuring a VM, the entire process is described as code.
+Ansible, in the context of Packer, is responsible for installing and configuring software within the created templates.</p><p>In this guide, we will look at building a virtual machine using Packer and subsequently configuring it with Ansible.</p><h2 id=rocky-linux-for-vmware>Rocky Linux for VMware</h2><p>Let&rsquo;s assume the following task: we need to prepare a base Rocky Linux image, from which virtual machines will be deployed in a private cloud based on VMware Cloud Director (VCD).</p><p>Template requirements:</p><ul><li>Compliance with the <a href=https://www.cisecurity.org/cis-benchmarks>CIS Benchmark</a>;</li><li>Pre-installed <a href=https://prometheus.io/docs/guides/node-exporter/>Prometheus Node Exporter</a>;</li><li>The ability to build Rocky Linux 8 and 9;</li><li>The ability to perform reproducible builds.</li></ul><h3 id=tools>Tools</h3><p>To solve this task, we will need the following tools:</p><ul><li><a href=https://developer.hashicorp.com/packer/install>Hashicorp Packer</a>;</li><li><a href=https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html>Ansible</a>;</li><li>One of the <a href=https://www.vmware.com/products/desktop-hypervisor/workstation-and-fusion>VMware desktop hypervisors</a>;</li><li><a href="https://customerconnect.vmware.com/downloads/get-download?downloadGroup=OVFTOOL441">VMware OVFTool</a>;</li><li><a href=https://www.python.org/downloads/>Python</a>.</li></ul><h3 id=project-structure>Project Structure</h3><p>When running the <code>packer build</code> command, Packer reads all <code>*.pkr.hcl</code> files in the execution directory and merges them into a single configuration. This allows us to split the configuration into multiple files, improving readability and future maintenance.</p><p>We will create a separate directory <code>rocky</code> for the template, and split the template configuration into individual files.</p><p>Everything related to Ansible will be placed in its own dedicated directory.</p><div class=window><div class=titlebar><div class=buttons><div class=bclose><a class=closebutton href=#><span><strong>x</strong></span></a></div><div class=minimize><a class=minimizebutton href=#><span><strong>&ndash;</strong></span></a></div><div class=zoom><a class=zoombutton href=#><span><strong>+</strong></span></a></div></div>ztsv@mac: ~/src/github.com/zt-sv</div><div class=terminal><ul><li></li><li>$&nbsp;tree&nbsp;packer-templates&nbsp;</li><li>packer-templates</li><li>├──&nbsp;ansible</li><li>│&nbsp;&nbsp;&nbsp;├──&nbsp;collections&nbsp;#&nbsp;Ansible&nbsp;collections</li><li>│&nbsp;&nbsp;&nbsp;├──&nbsp;roles&nbsp;#&nbsp;Ansible&nbsp;roles</li><li>│&nbsp;&nbsp;&nbsp;├──&nbsp;ansible.cfg&nbsp;#&nbsp;Ansible&nbsp;configuration</li><li>│&nbsp;&nbsp;&nbsp;├──&nbsp;playbook.yaml</li><li>│&nbsp;&nbsp;&nbsp;└──&nbsp;requirements.yaml&nbsp;#&nbsp;Ansible&nbsp;dependencies</li><li>├──&nbsp;artifacts&nbsp;#&nbsp;Directory&nbsp;for&nbsp;the&nbsp;built&nbsp;virtual&nbsp;machines</li><li>├──&nbsp;requirements.txt&nbsp;#&nbsp;Python&nbsp;dependencies</li><li>└──&nbsp;rocky</li><li>&nbsp;&nbsp;&nbsp;&nbsp;├──&nbsp;build.pkr.hcl&nbsp;#&nbsp;Build&nbsp;blocks</li><li>&nbsp;&nbsp;&nbsp;&nbsp;├──&nbsp;packer.pkr.hcl&nbsp;#&nbsp;Packer&nbsp;dependencies&nbsp;block</li><li>&nbsp;&nbsp;&nbsp;&nbsp;├──&nbsp;source.pkr.hcl&nbsp;#&nbsp;Builder&nbsp;configuration</li><li>&nbsp;&nbsp;&nbsp;&nbsp;└──&nbsp;variables.pkr.hcl&nbsp;#&nbsp;Variable&nbsp;definitions</li><li></li></ul></div></div><h3 id=installing-ansible>Installing Ansible</h3><p>It is most convenient to install Ansible via <code>pip</code> into an isolated project virtual environment.</p><p>Our task requires building images on Rocky 8. It should be noted that this version uses Python 3.6, which is incompatible with newer versions of <a href=https://pypi.org/project/ansible-core>ansible-core</a>. In this case, an Ansible version &lt; 2.17 must be used.</p><p>We pin the Ansible version in the <code>requirements.txt</code> file:</p><div class=highlight><pre tabindex=0 class=chroma><code class=language-requirements.txt data-lang=requirements.txt><span class=line><span class=cl>ansible-core==2.16.16
+</span></span></code></pre></div><p>Create and activate a new <code>venv</code>:</p><div class=window><div class=titlebar><div class=buttons><div class=bclose><a class=closebutton href=#><span><strong>x</strong></span></a></div><div class=minimize><a class=minimizebutton href=#><span><strong>&ndash;</strong></span></a></div><div class=zoom><a class=zoombutton href=#><span><strong>+</strong></span></a></div></div>ztsv@mac: ~/src/github.com/zt-sv/packer-templates</div><div class=terminal><ul><li></li><li>$&nbsp;python3&nbsp;-m&nbsp;venv&nbsp;$(pwd)/venv&nbsp;&nbsp;</li><li>$&nbsp;source&nbsp;$(pwd)/venv/bin/activate</li><li></li></ul></div></div><p>And install the dependencies:</p><div class=window><div class=titlebar><div class=buttons><div class=bclose><a class=closebutton href=#><span><strong>x</strong></span></a></div><div class=minimize><a class=minimizebutton href=#><span><strong>&ndash;</strong></span></a></div><div class=zoom><a class=zoombutton href=#><span><strong>+</strong></span></a></div></div>ztsv@mac: ~/src/github.com/zt-sv/packer-templates</div><div class=terminal><ul><li></li><li>$&nbsp;pip3&nbsp;install&nbsp;-r&nbsp;requirements.txt</li><li></li></ul></div></div><p>Since we plan to build multiple images across different OS versions, we must ensure <code>Ansible facts</code> saves in memory rather than on disk. Otherwise, cached facts from another system might be reused, leading to errors.</p><p>To do this, specify the following in <code>ansible.cfg</code>:</p><div class=collapsibleHighlight><pre class=collapsibleHighlight_code id=collapsibleHighlight-code-e9aba60334eb447a>[defaults]
+gathering = smart  
+fact_caching = memory</pre><div class=collapsibleHighlight_copy onclick='navigator.clipboard.writeText(document.getElementById("collapsibleHighlight-code-e9aba60334eb447a").textContent)'><svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linejoin="round" stroke-width="1.4" d="M9 8v3a1 1 0 01-1 1H5m11 4h2a1 1 0 001-1V5a1 1 0 00-1-1h-7a1 1 0 00-1 1v1m4 3v10a1 1 0 01-1 1H6a1 1 0 01-1-1v-7.13a1 1 0 01.24-.65L7.7 8.35A1 1 0 018.46 8H13a1 1 0 011 1z"/></svg></div><div class=collapsibleHighlight_lang>cfg, 3 lines</div><div class=collapsibleHighlight_wrapper><div class=highlight><pre tabindex=0 class=chroma><code class=language-cfg data-lang=cfg><span class=line><span class=ln>1</span><span class=cl><span class=k>[defaults]</span>
+</span></span><span class=line><span class=ln>2</span><span class=cl><span class=na>gathering</span> <span class=o>=</span> <span class=s>smart  </span>
+</span></span><span class=line><span class=ln>3</span><span class=cl><span class=na>fact_caching</span> <span class=o>=</span> <span class=s>memory</span></span></span></code></pre></div></div></div><h3 id=defining-and-installing-packer-dependencies>Defining and Installing Packer Dependencies</h3><p>The following plugins are required to build the template:</p><ul><li><a href=https://developer.hashicorp.com/packer/integrations/vmware/vmware/>VMware</a> - builders for VMware hypervisors;</li><li><a href=https://developer.hashicorp.com/packer/integrations/hashicorp/ansible>Ansible</a> - for running Ansible playbooks from Packer;</li><li><a href=https://developer.hashicorp.com/packer/integrations/ethanmdavidson/git>Git</a> - for fetching git information.</li></ul><p>We add them to the <code>rocky/packer.pkr.hcl</code> file and pin the current versions:</p><div class=collapsibleHighlight><pre class=collapsibleHighlight_code id=collapsibleHighlight-code-43763950546e6305>packer {  
+  required_version = &#34;&gt;= 1.14.0, &lt; 2.0.0&#34;
+  required_plugins {
+    vmware = {
+      version = &#34;= 1.2.0&#34;
+      source  = &#34;github.com/hashicorp/vmware&#34;
+    }
+    ansible = {
+      version = &#34;= 1.1.4&#34;
+      source  = &#34;github.com/hashicorp/ansible&#34;
+    }
+    git = {
+      version = &#34;= 0.6.5&#34;
+      source  = &#34;github.com/ethanmdavidson/git&#34;
+    }
+  }
+}</pre><div class=collapsibleHighlight_copy onclick='navigator.clipboard.writeText(document.getElementById("collapsibleHighlight-code-43763950546e6305").textContent)'><svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linejoin="round" stroke-width="1.4" d="M9 8v3a1 1 0 01-1 1H5m11 4h2a1 1 0 001-1V5a1 1 0 00-1-1h-7a1 1 0 00-1 1v1m4 3v10a1 1 0 01-1 1H6a1 1 0 01-1-1v-7.13a1 1 0 01.24-.65L7.7 8.35A1 1 0 018.46 8H13a1 1 0 011 1z"/></svg></div><div class=collapsibleHighlight_lang>hcl, 17 lines</div><div class=collapsibleHighlight_wrapper><div class=highlight><pre tabindex=0 class=chroma><code class=language-hcl data-lang=hcl><span class=line><span class=ln> 1</span><span class=cl><span class=k>packer</span> {  
+</span></span><span class=line><span class=ln> 2</span><span class=cl>  <span class=n>required_version</span> <span class=o>=</span><span class=n> &#34;&gt;</span><span class=o>=</span> <span class=m>1</span><span class=p>.</span><span class=m>14</span><span class=p>.</span><span class=m>0</span><span class=p>,</span> <span class=err>&lt;</span> <span class=m>2</span><span class=p>.</span><span class=m>0</span><span class=p>.</span><span class=m>0</span><span class=err>&#34;</span>
+</span></span><span class=line><span class=ln> 3</span><span class=cl>  <span class=k>required_plugins</span> {
+</span></span><span class=line><span class=ln> 4</span><span class=cl><span class=n>    vmware</span> <span class=o>=</span> {
+</span></span><span class=line><span class=ln> 5</span><span class=cl><span class=n>      version</span> <span class=o>=</span><span class=n> &#34;</span><span class=o>=</span> <span class=m>1</span><span class=p>.</span><span class=m>2</span><span class=p>.</span><span class=m>0</span><span class=err>&#34;</span>
+</span></span><span class=line><span class=ln> 6</span><span class=cl><span class=n>      source</span>  <span class=o>=</span> <span class=s2>&#34;github.com/hashicorp/vmware&#34;</span>
+</span></span><span class=line><span class=ln> 7</span><span class=cl>    }
+</span></span><span class=line><span class=ln> 8</span><span class=cl><span class=n>    ansible</span> <span class=o>=</span> {
+</span></span><span class=line><span class=ln> 9</span><span class=cl><span class=n>      version</span> <span class=o>=</span><span class=n> &#34;</span><span class=o>=</span> <span class=m>1</span><span class=p>.</span><span class=m>1</span><span class=p>.</span><span class=m>4</span><span class=err>&#34;</span>
+</span></span><span class=line><span class=ln>10</span><span class=cl><span class=n>      source</span>  <span class=o>=</span> <span class=s2>&#34;github.com/hashicorp/ansible&#34;</span>
+</span></span><span class=line><span class=ln>11</span><span class=cl>    }
+</span></span><span class=line><span class=ln>12</span><span class=cl><span class=n>    git</span> <span class=o>=</span> {
+</span></span><span class=line><span class=ln>13</span><span class=cl><span class=n>      version</span> <span class=o>=</span><span class=n> &#34;</span><span class=o>=</span> <span class=m>0</span><span class=p>.</span><span class=m>6</span><span class=p>.</span><span class=m>5</span><span class=err>&#34;</span>
+</span></span><span class=line><span class=ln>14</span><span class=cl><span class=n>      source</span>  <span class=o>=</span> <span class=s2>&#34;github.com/ethanmdavidson/git&#34;</span>
+</span></span><span class=line><span class=ln>15</span><span class=cl>    }
+</span></span><span class=line><span class=ln>16</span><span class=cl>  }
+</span></span><span class=line><span class=ln>17</span><span class=cl>}</span></span></code></pre></div></div></div><p>To install the plugins, run the <a href=https://developer.hashicorp.com/packer/docs/commands/init><code>init</code></a> command in the template directory:</p><div class=window><div class=titlebar><div class=buttons><div class=bclose><a class=closebutton href=#><span><strong>x</strong></span></a></div><div class=minimize><a class=minimizebutton href=#><span><strong>&ndash;</strong></span></a></div><div class=zoom><a class=zoombutton href=#><span><strong>+</strong></span></a></div></div>ztsv@mac: ~/src/github.com/zt-sv/packer-templates</div><div class=terminal><ul><li></li><li>$&nbsp;packer&nbsp;init&nbsp;rocky</li><li></li></ul></div></div><h3 id=vmware-iso-builder>VMware ISO Builder</h3><p><a href=https://developer.hashicorp.com/packer/integrations/hashicorp/vmware/latest/components/builder/iso>VMware ISO</a> allows creating virtual machines from an ISO file in VMware desktop hypervisors.</p><p>After creating the virtual machine, the builder passes the kickstart file URL to the OS bootloader via Packer&rsquo;s built-in HTTP server. It then waits for an SSH connection to hand over control to the <code>build</code> block and execute the provisioning scripts.</p><p>Finally, the built virtual machine is exported to the OVA format, which can be imported into VCD.</p><p>For image versioning, a combination of the current date and the git commit hash is used. This helps us understand exactly when and from which commit the image was built.</p><p>We will describe the entire builder configuration in the <code>rocky/source.pkr.hcl</code> file.</p><div class=collapsibleHighlight><input id=collapsibleHighlight-4fbec6dfffe71976 checked type=checkbox class=collapsibleHighlight_toggle>
+<label for=collapsibleHighlight-4fbec6dfffe71976 class=collapsibleHighlight_label></label><pre class=collapsibleHighlight_code id=collapsibleHighlight-code-4fbec6dfffe71976>data &#34;git-commit&#34; &#34;cwd-head&#34; {}
+
+locals {
+  truncated_sha = substr(data.git-commit.cwd-head.hash, 0, 8)
+  build_date    = formatdate(&#34;YYYY-MM-DD&#34;, timestamp())
+  vm_name       = &#34;Rocky${var.rocky_version}-${local.build_date}-${local.truncated_sha}&#34;
+  iso_url       = &#34;${var.rocky_repository_url}/${var.rocky_version}/isos/x86_64/Rocky-${var.rocky_version}-x86_64-minimal.iso&#34;
+  iso_checksum  = &#34;file:${local.iso_url}.CHECKSUM&#34;
+  export_path   = &#34;${abspath(path.cwd)}/artifacts/${local.vm_name}&#34;
+  repo_list     = [
+    {
+      name : &#34;BaseOS&#34;,
+      url : &#34;${var.rocky_repository_url}/${var.rocky_version}/BaseOS/x86_64/os/&#34;,
+    },
+    {
+      name : &#34;AppStream&#34;,
+      url : &#34;${var.rocky_repository_url}/${var.rocky_version}/AppStream/x86_64/os/&#34;,
+    },
+    {
+      name : &#34;extras&#34;,
+      url : &#34;${var.rocky_repository_url}/${var.rocky_version}/extras/x86_64/os/&#34;,
+    },
+    {
+      name : &#34;devel&#34;,
+      url : &#34;${var.rocky_repository_url}/${var.rocky_version}/devel/x86_64/os/&#34;,
+    },
+  ]
+  kickstart = templatefile(&#34;${abspath(path.root)}/templates/kickstart.pkrtpl&#34;, {
+    build_username : var.provisioner_username,
+    build_password : var.provisioner_password,
+    lvm_layout : var.lvm_layout,
+    repo_list : local.repo_list,
+    guest_timezone : var.guest_timezone,
+    install_packages : var.install_packages,
+    uninstall_packages : var.uninstall_packages,
+  })
+}
+
+source &#34;vmware-iso&#34; &#34;golden-image&#34; {
+  vm_name       = local.vm_name
+  version       = var.vmware_virtual_hardware_version
+  guest_os_type = var.vmware_guest_os_type
+
+  headless = true
+
+  # Hardware configuration
+  cpus                 = var.cpus
+  cores                = var.cores
+  memory               = var.memory
+  disk_size            = var.disk_size
+  network              = &#34;nat&#34;
+  network_adapter_type = &#34;VMXNET3&#34;
+
+  disk_adapter_type = &#34;pvscsi&#34;
+
+  # ISO Configuration
+  iso_url      = local.iso_url
+  iso_checksum = local.iso_checksum
+
+  # Http directory configuration
+  http_content = {
+    &#34;/kickstart.ks&#34; = local.kickstart,
+  }
+
+  # Communicator configuration
+  communicator           = &#34;ssh&#34;
+  ssh_username           = var.provisioner_username
+  ssh_password           = var.provisioner_password
+  ssh_timeout            = &#34;60m&#34;
+  ssh_handshake_attempts = 10
+
+  # Boot Configuration
+  boot_wait    = &#34;5s&#34;
+  boot_command = [
+    &#34;&lt;up&gt;&lt;tab&gt; inst.text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/kickstart.ks&lt;enter&gt;&lt;wait&gt;&lt;enter&gt;&#34;,
+  ]
+  shutdown_command = &#34;sudo /sbin/halt -h -p&#34;
+
+  # Export configuration
+  format           = &#34;ova&#34;
+  output_directory = &#34;${local.export_path}/vmware&#34;
+}</pre><div class=collapsibleHighlight_copy onclick='navigator.clipboard.writeText(document.getElementById("collapsibleHighlight-code-4fbec6dfffe71976").textContent)'><svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linejoin="round" stroke-width="1.4" d="M9 8v3a1 1 0 01-1 1H5m11 4h2a1 1 0 001-1V5a1 1 0 00-1-1h-7a1 1 0 00-1 1v1m4 3v10a1 1 0 01-1 1H6a1 1 0 01-1-1v-7.13a1 1 0 01.24-.65L7.7 8.35A1 1 0 018.46 8H13a1 1 0 011 1z"/></svg></div><div class=collapsibleHighlight_lang>hcl, 82 lines</div><div class=collapsibleHighlight_wrapper><div class=highlight><pre tabindex=0 class=chroma><code class=language-hcl data-lang=hcl><span class=line><span class=ln> 1</span><span class=cl><span class=k>data</span> <span class=s2>&#34;git-commit&#34; &#34;cwd-head&#34;</span> {}
+</span></span><span class=line><span class=ln> 2</span><span class=cl>
+</span></span><span class=line><span class=ln> 3</span><span class=cl><span class=k>locals</span> {
+</span></span><span class=line><span class=ln> 4</span><span class=cl><span class=n>  truncated_sha</span> <span class=o>=</span> <span class=k>substr</span><span class=p>(</span><span class=k>data</span><span class=p>.</span><span class=k>git</span><span class=err>-</span><span class=k>commit</span><span class=p>.</span><span class=k>cwd</span><span class=err>-</span><span class=k>head</span><span class=p>.</span><span class=k>hash</span><span class=p>,</span> <span class=m>0</span><span class=p>,</span> <span class=m>8</span><span class=p>)</span>
+</span></span><span class=line><span class=ln> 5</span><span class=cl><span class=n>  build_date</span>    <span class=o>=</span> <span class=k>formatdate</span><span class=p>(</span><span class=s2>&#34;YYYY-MM-DD&#34;</span><span class=p>,</span> <span class=k>timestamp</span><span class=p>())</span>
+</span></span><span class=line><span class=ln> 6</span><span class=cl><span class=n>  vm_name</span>       <span class=o>=</span> <span class=s2>&#34;Rocky${var.rocky_version}-${local.build_date}-${local.truncated_sha}&#34;</span>
+</span></span><span class=line><span class=ln> 7</span><span class=cl><span class=n>  iso_url</span>       <span class=o>=</span> <span class=s2>&#34;${var.rocky_repository_url}/${var.rocky_version}/isos/x86_64/Rocky-${var.rocky_version}-x86_64-minimal.iso&#34;</span>
+</span></span><span class=line><span class=ln> 8</span><span class=cl><span class=n>  iso_checksum</span>  <span class=o>=</span> <span class=s2>&#34;file:${local.iso_url}.CHECKSUM&#34;</span>
+</span></span><span class=line><span class=ln> 9</span><span class=cl><span class=n>  export_path</span>   <span class=o>=</span> <span class=s2>&#34;${abspath(path.cwd)}/artifacts/${local.vm_name}&#34;</span>
+</span></span><span class=line><span class=ln>10</span><span class=cl><span class=n>  repo_list</span>     <span class=o>=</span> <span class=p>[</span>
+</span></span><span class=line><span class=ln>11</span><span class=cl>    {
+</span></span><span class=line><span class=ln>12</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;BaseOS&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>13</span><span class=cl>      <span class=k>url</span> <span class=err>:</span> <span class=s2>&#34;${var.rocky_repository_url}/${var.rocky_version}/BaseOS/x86_64/os/&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>14</span><span class=cl>    }<span class=p>,</span>
+</span></span><span class=line><span class=ln>15</span><span class=cl>    {
+</span></span><span class=line><span class=ln>16</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;AppStream&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>17</span><span class=cl>      <span class=k>url</span> <span class=err>:</span> <span class=s2>&#34;${var.rocky_repository_url}/${var.rocky_version}/AppStream/x86_64/os/&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>18</span><span class=cl>    }<span class=p>,</span>
+</span></span><span class=line><span class=ln>19</span><span class=cl>    {
+</span></span><span class=line><span class=ln>20</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;extras&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>21</span><span class=cl>      <span class=k>url</span> <span class=err>:</span> <span class=s2>&#34;${var.rocky_repository_url}/${var.rocky_version}/extras/x86_64/os/&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>22</span><span class=cl>    }<span class=p>,</span>
+</span></span><span class=line><span class=ln>23</span><span class=cl>    {
+</span></span><span class=line><span class=ln>24</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;devel&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>25</span><span class=cl>      <span class=k>url</span> <span class=err>:</span> <span class=s2>&#34;${var.rocky_repository_url}/${var.rocky_version}/devel/x86_64/os/&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>26</span><span class=cl>    }<span class=p>,</span>
+</span></span><span class=line><span class=ln>27</span><span class=cl>  <span class=p>]</span>
+</span></span><span class=line><span class=ln>28</span><span class=cl><span class=n>  kickstart</span> <span class=o>=</span> <span class=k>templatefile</span><span class=p>(</span><span class=s2>&#34;${abspath(path.root)}/templates/kickstart.pkrtpl&#34;</span><span class=p>,</span> {
+</span></span><span class=line><span class=ln>29</span><span class=cl>    <span class=k>build_username</span> <span class=err>:</span> <span class=k>var</span><span class=p>.</span><span class=k>provisioner_username</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>30</span><span class=cl>    <span class=k>build_password</span> <span class=err>:</span> <span class=k>var</span><span class=p>.</span><span class=k>provisioner_password</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>31</span><span class=cl>    <span class=k>lvm_layout</span> <span class=err>:</span> <span class=k>var</span><span class=p>.</span><span class=k>lvm_layout</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>32</span><span class=cl>    <span class=k>repo_list</span> <span class=err>:</span> <span class=k>local</span><span class=p>.</span><span class=k>repo_list</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>33</span><span class=cl>    <span class=k>guest_timezone</span> <span class=err>:</span> <span class=k>var</span><span class=p>.</span><span class=k>guest_timezone</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>34</span><span class=cl>    <span class=k>install_packages</span> <span class=err>:</span> <span class=k>var</span><span class=p>.</span><span class=k>install_packages</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>35</span><span class=cl>    <span class=k>uninstall_packages</span> <span class=err>:</span> <span class=k>var</span><span class=p>.</span><span class=k>uninstall_packages</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>36</span><span class=cl>  }<span class=p>)</span>
+</span></span><span class=line><span class=ln>37</span><span class=cl>}
+</span></span><span class=line><span class=ln>38</span><span class=cl>
+</span></span><span class=line><span class=ln>39</span><span class=cl><span class=k>source</span> <span class=s2>&#34;vmware-iso&#34; &#34;golden-image&#34;</span> {
+</span></span><span class=line><span class=ln>40</span><span class=cl><span class=n>  vm_name</span>       <span class=o>=</span> <span class=k>local</span><span class=p>.</span><span class=k>vm_name</span>
+</span></span><span class=line><span class=ln>41</span><span class=cl><span class=n>  version</span>       <span class=o>=</span> <span class=k>var</span><span class=p>.</span><span class=k>vmware_virtual_hardware_version</span>
+</span></span><span class=line><span class=ln>42</span><span class=cl><span class=n>  guest_os_type</span> <span class=o>=</span> <span class=k>var</span><span class=p>.</span><span class=k>vmware_guest_os_type</span>
+</span></span><span class=line><span class=ln>43</span><span class=cl>
+</span></span><span class=line><span class=ln>44</span><span class=cl><span class=n>  headless</span> <span class=o>=</span> <span class=kt>true</span><span class=c1>
+</span></span></span><span class=line><span class=ln>45</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>46</span><span class=cl><span class=c1>  # Hardware configuration
+</span></span></span><span class=line><span class=ln>47</span><span class=cl><span class=n>  cpus</span>                 <span class=o>=</span> <span class=k>var</span><span class=p>.</span><span class=k>cpus</span>
+</span></span><span class=line><span class=ln>48</span><span class=cl><span class=n>  cores</span>                <span class=o>=</span> <span class=k>var</span><span class=p>.</span><span class=k>cores</span>
+</span></span><span class=line><span class=ln>49</span><span class=cl><span class=n>  memory</span>               <span class=o>=</span> <span class=k>var</span><span class=p>.</span><span class=k>memory</span>
+</span></span><span class=line><span class=ln>50</span><span class=cl><span class=n>  disk_size</span>            <span class=o>=</span> <span class=k>var</span><span class=p>.</span><span class=k>disk_size</span>
+</span></span><span class=line><span class=ln>51</span><span class=cl><span class=n>  network</span>              <span class=o>=</span> <span class=s2>&#34;nat&#34;</span>
+</span></span><span class=line><span class=ln>52</span><span class=cl><span class=n>  network_adapter_type</span> <span class=o>=</span> <span class=s2>&#34;VMXNET3&#34;</span>
+</span></span><span class=line><span class=ln>53</span><span class=cl>
+</span></span><span class=line><span class=ln>54</span><span class=cl><span class=n>  disk_adapter_type</span> <span class=o>=</span> <span class=s2>&#34;pvscsi&#34;</span><span class=c1>
+</span></span></span><span class=line><span class=ln>55</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>56</span><span class=cl><span class=c1>  # ISO Configuration
+</span></span></span><span class=line><span class=ln>57</span><span class=cl><span class=n>  iso_url</span>      <span class=o>=</span> <span class=k>local</span><span class=p>.</span><span class=k>iso_url</span>
+</span></span><span class=line><span class=ln>58</span><span class=cl><span class=n>  iso_checksum</span> <span class=o>=</span> <span class=k>local</span><span class=p>.</span><span class=k>iso_checksum</span><span class=c1>
+</span></span></span><span class=line><span class=ln>59</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>60</span><span class=cl><span class=c1>  # Http directory configuration
+</span></span></span><span class=line><span class=ln>61</span><span class=cl><span class=n>  http_content</span> <span class=o>=</span> {
+</span></span><span class=line><span class=ln>62</span><span class=cl><span class=n>    &#34;/kickstart.ks&#34;</span> <span class=o>=</span> <span class=k>local</span><span class=p>.</span><span class=k>kickstart</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>63</span><span class=cl>  }<span class=c1>
+</span></span></span><span class=line><span class=ln>64</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>65</span><span class=cl><span class=c1>  # Communicator configuration
+</span></span></span><span class=line><span class=ln>66</span><span class=cl><span class=n>  communicator</span>           <span class=o>=</span> <span class=s2>&#34;ssh&#34;</span>
+</span></span><span class=line><span class=ln>67</span><span class=cl><span class=n>  ssh_username</span>           <span class=o>=</span> <span class=k>var</span><span class=p>.</span><span class=k>provisioner_username</span>
+</span></span><span class=line><span class=ln>68</span><span class=cl><span class=n>  ssh_password</span>           <span class=o>=</span> <span class=k>var</span><span class=p>.</span><span class=k>provisioner_password</span>
+</span></span><span class=line><span class=ln>69</span><span class=cl><span class=n>  ssh_timeout</span>            <span class=o>=</span> <span class=s2>&#34;60m&#34;</span>
+</span></span><span class=line><span class=ln>70</span><span class=cl><span class=n>  ssh_handshake_attempts</span> <span class=o>=</span> <span class=m>10</span><span class=c1>
+</span></span></span><span class=line><span class=ln>71</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>72</span><span class=cl><span class=c1>  # Boot Configuration
+</span></span></span><span class=line><span class=ln>73</span><span class=cl><span class=n>  boot_wait</span>    <span class=o>=</span> <span class=s2>&#34;5s&#34;</span>
+</span></span><span class=line><span class=ln>74</span><span class=cl><span class=n>  boot_command</span> <span class=o>=</span> <span class=p>[</span>
+</span></span><span class=line><span class=ln>75</span><span class=cl><span class=n>    &#34;&lt;up&gt;&lt;tab&gt; inst.text inst.ks</span><span class=o>=</span><span class=k>http</span><span class=err>://</span>{{ <span class=p>.</span><span class=k>HTTPIP</span> }}<span class=err>:</span>{{ <span class=p>.</span><span class=k>HTTPPort</span> }}<span class=err>/</span><span class=k>kickstart</span><span class=p>.</span><span class=k>ks</span><span class=err>&lt;</span><span class=k>enter</span><span class=err>&gt;&lt;</span><span class=k>wait</span><span class=err>&gt;&lt;</span><span class=k>enter</span><span class=err>&gt;&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>76</span><span class=cl>  <span class=p>]</span>
+</span></span><span class=line><span class=ln>77</span><span class=cl><span class=n>  shutdown_command</span> <span class=o>=</span> <span class=s2>&#34;sudo /sbin/halt -h -p&#34;</span><span class=c1>
+</span></span></span><span class=line><span class=ln>78</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>79</span><span class=cl><span class=c1>  # Export configuration
+</span></span></span><span class=line><span class=ln>80</span><span class=cl><span class=n>  format</span>           <span class=o>=</span> <span class=s2>&#34;ova&#34;</span>
+</span></span><span class=line><span class=ln>81</span><span class=cl><span class=n>  output_directory</span> <span class=o>=</span> <span class=s2>&#34;${local.export_path}/vmware&#34;</span>
+</span></span><span class=line><span class=ln>82</span><span class=cl>}</span></span></code></pre></div></div></div><p>Most configuration parameters are self-explanatory, but I would like to specifically mention the <code>version</code> and <code>guest_os_type</code> parameters.</p><p>The <code>version</code> parameter defines the VMware VM Hardware Version — it determines the virtualization capabilities and depends on the hypervisor version used. Information on supported versions can be found in the article &ldquo;<a href="https://knowledge.broadcom.com/external/article?articleNumber=315655">Virtual machine hardware versions</a>&rdquo;.</p><p>You must also set the correct <code>guest_os_type</code>. This parameter defines the type of operating system inside the virtual machine and plays a crucial role in performance and the optimal operation of the hypervisor and VMware Tools. Available options can be found in the article &ldquo;<a href="https://knowledge.broadcom.com/external/article?articleNumber=321876">Determine the guest OS from a VM configuration file</a>&rdquo;.</p><h3 id=kickstart>Kickstart</h3><p>A <a href=https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9/html/automatically_installing_rhel/starting-kickstart-installations_rhel-installer>kickstart</a> file is used for automated OS installation and configuration.</p><p>It handles:</p><ul><li>Disk partitioning;</li><li>Setting up the timezone and time synchronization servers;</li><li>Adding a user;</li><li>Installing packages;</li><li>Initial system hardening.</li></ul><p>The file is templated using variables defined in the builder. The template file itself is placed in <code>rocky/templates/kickstart.pkrtpl</code>.</p><div class=collapsibleHighlight><input id=collapsibleHighlight-f93fd5914713885d checked type=checkbox class=collapsibleHighlight_toggle>
+<label for=collapsibleHighlight-f93fd5914713885d class=collapsibleHighlight_label></label><pre class=collapsibleHighlight_code id=collapsibleHighlight-code-f93fd5914713885d>###########################
+# Kickstart Configuration #
+###########################
+
+cdrom
+
+### Setup repositories
+%{ for r in repo_list ~}
+repo --name=&#34;${r.name}&#34; --baseurl=&#34;${r.url}&#34;
+%{ endfor ~}
+
+### Performs the kickstart installation in text mode
+text
+
+### System language
+lang en_US.utf8
+
+### Sets the default keyboard type
+keyboard --vckeymap=us
+
+### Configure network information for target system
+network --bootproto=dhcp
+
+### Configure firewall settings for the system
+firewall --enabled
+
+### Sets up the authentication options for the system. The SSDD profile sets sha512 to hash passwords. Passwords are shadowed by default
+authselect select sssd
+
+### Skip EULA (include this for non-interactive install of subcription based EL)
+eula --agreed
+
+### Do not configure the X Window System
+skipx
+
+### System services
+services --enabled=&#34;NetworkManager,chronyd,sshd&#34;
+
+### System timezone with ntp servers
+timezone ${guest_timezone} --utc --ntpservers=0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org
+
+### Lock root - user will not be able to log in from the console
+rootpw --lock
+
+### Add a user that can login and escalate privileges.
+user --name=${build_username} --plaintext --password=${build_password} --groups=wheel
+
+### Ensure SELinux State is Enforcing
+selinux --enforcing
+
+##########################
+###   Disk Partition   ###
+##########################
+clearpart --all --initlabel
+part /boot --fstype xfs --size=512 --ondisk sda
+part pv.01 --size=1 --grow --ondisk sda
+volgroup vg_root pv.01
+
+%{ for lv in lvm_layout ~}
+logvol ${lv.mountpoint} --fstype ${lv.fstype} --vgname vg_root --name ${lv.name} --size=${lv.size} %{ if length(lv.fsoptions) &gt; 0 }--fsoptions=&#39;${join(&#34;,&#34;, lv.fsoptions)}&#39;%{ endif }
+%{ endfor ~}
+
+
+##########################
+### Packages selection ###
+##########################
+%packages --ignoremissing --excludedocs
+@core --nodefaults
+%{ for package in install_packages ~}
+${package}
+%{ endfor ~}
+%{ for package in uninstall_packages ~}
+-${package}
+%{ endfor ~}
+%end
+
+# Disable KDump Kernel Crash Analyzer
+%addon com_redhat_kdump --disable
+%end
+
+########################
+###   Post install   ###
+########################
+%post --log=/root/ks-post.log
+#!/bin/bash
+
+# CCE-83857-3, CCE-83881-3, CCE-83891-2 - Add noexec, nodev, nosuid options to /dev/shm
+echo &#34;none    /dev/shm    tmpfs   nosuid,nodev,noexec   0 0&#34; &gt;&gt; /etc/fstab
+
+echo &#34;LANG=en_US.utf-8&#34; &gt;&gt; /etc/environment
+echo &#34;LC_ALL=en_US.utf-8&#34; &gt;&gt; /etc/environment
+
+# Disable AllowZoneDrifting
+replace_or_append &#39;/etc/firewalld/firewalld.conf&#39; &#39;^AllowZoneDrifting&#39; &#39;no&#39; &#39;&#39; &#39;%s=%s&#39;
+# Remove cockpit service
+firewall-offline-cmd --remove-service=cockpit
+
+echo &#34;${build_username} ALL=(ALL) NOPASSWD: ALL&#34; &gt;&gt; /etc/sudoers.d/${build_username}
+sed -i &#34;s/^.*requiretty/#Defaults requiretty/&#34; /etc/sudoers
+
+%end
+
+# Reboot after install
+reboot --eject</pre><div class=collapsibleHighlight_copy onclick='navigator.clipboard.writeText(document.getElementById("collapsibleHighlight-code-f93fd5914713885d").textContent)'><svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linejoin="round" stroke-width="1.4" d="M9 8v3a1 1 0 01-1 1H5m11 4h2a1 1 0 001-1V5a1 1 0 00-1-1h-7a1 1 0 00-1 1v1m4 3v10a1 1 0 01-1 1H6a1 1 0 01-1-1v-7.13a1 1 0 01.24-.65L7.7 8.35A1 1 0 018.46 8H13a1 1 0 011 1z"/></svg></div><div class=collapsibleHighlight_lang>hcl, 104 lines</div><div class=collapsibleHighlight_wrapper><div class=highlight><pre tabindex=0 class=chroma><code class=language-hcl data-lang=hcl><span class=line><span class=ln>  1</span><span class=cl><span class=c1>###########################
+</span></span></span><span class=line><span class=ln>  2</span><span class=cl><span class=c1># Kickstart Configuration #
+</span></span></span><span class=line><span class=ln>  3</span><span class=cl><span class=c1>###########################
+</span></span></span><span class=line><span class=ln>  4</span><span class=cl>
+</span></span><span class=line><span class=ln>  5</span><span class=cl><span class=k>cdrom</span><span class=c1>
+</span></span></span><span class=line><span class=ln>  6</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>  7</span><span class=cl><span class=c1>### Setup repositories
+</span></span></span><span class=line><span class=ln>  8</span><span class=cl><span class=err>%</span>{ <span class=k>for</span> <span class=k>r</span> <span class=k>in</span> <span class=k>repo_list</span> <span class=err>~</span>}
+</span></span><span class=line><span class=ln>  9</span><span class=cl><span class=n>repo --name</span><span class=o>=</span><span class=s2>&#34;${r.name}&#34; --baseurl=&#34;${r.url}&#34;</span>
+</span></span><span class=line><span class=ln> 10</span><span class=cl><span class=err>%</span>{ <span class=k>endfor</span> <span class=err>~</span>}<span class=c1>
+</span></span></span><span class=line><span class=ln> 11</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 12</span><span class=cl><span class=c1>### Performs the kickstart installation in text mode
+</span></span></span><span class=line><span class=ln> 13</span><span class=cl><span class=k>text</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 14</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 15</span><span class=cl><span class=c1>### System language
+</span></span></span><span class=line><span class=ln> 16</span><span class=cl><span class=k>lang</span> <span class=k>en_US</span><span class=p>.</span><span class=k>utf8</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 17</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 18</span><span class=cl><span class=c1>### Sets the default keyboard type
+</span></span></span><span class=line><span class=ln> 19</span><span class=cl><span class=n>keyboard --vckeymap</span><span class=o>=</span><span class=k>us</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 20</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 21</span><span class=cl><span class=c1>### Configure network information for target system
+</span></span></span><span class=line><span class=ln> 22</span><span class=cl><span class=n>network --bootproto</span><span class=o>=</span><span class=k>dhcp</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 23</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 24</span><span class=cl><span class=c1>### Configure firewall settings for the system
+</span></span></span><span class=line><span class=ln> 25</span><span class=cl><span class=k>firewall</span> <span class=err>--</span><span class=k>enabled</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 26</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 27</span><span class=cl><span class=c1>### Sets up the authentication options for the system. The SSDD profile sets sha512 to hash passwords. Passwords are shadowed by default
+</span></span></span><span class=line><span class=ln> 28</span><span class=cl><span class=k>authselect</span> <span class=k>select</span> <span class=k>sssd</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 29</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 30</span><span class=cl><span class=c1>### Skip EULA (include this for non-interactive install of subcription based EL)
+</span></span></span><span class=line><span class=ln> 31</span><span class=cl><span class=k>eula</span> <span class=err>--</span><span class=k>agreed</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 32</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 33</span><span class=cl><span class=c1>### Do not configure the X Window System
+</span></span></span><span class=line><span class=ln> 34</span><span class=cl><span class=k>skipx</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 35</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 36</span><span class=cl><span class=c1>### System services
+</span></span></span><span class=line><span class=ln> 37</span><span class=cl><span class=n>services --enabled</span><span class=o>=</span><span class=s2>&#34;NetworkManager,chronyd,sshd&#34;</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 38</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 39</span><span class=cl><span class=c1>### System timezone with ntp servers
+</span></span></span><span class=line><span class=ln> 40</span><span class=cl><span class=n>timezone ${guest_timezone} --utc --ntpservers</span><span class=o>=</span><span class=m>0</span><span class=p>.</span><span class=k>pool</span><span class=p>.</span><span class=k>ntp</span><span class=p>.</span><span class=k>org</span><span class=p>,</span><span class=m>1</span><span class=p>.</span><span class=k>pool</span><span class=p>.</span><span class=k>ntp</span><span class=p>.</span><span class=k>org</span><span class=p>,</span><span class=m>2</span><span class=p>.</span><span class=k>pool</span><span class=p>.</span><span class=k>ntp</span><span class=p>.</span><span class=k>org</span><span class=p>,</span><span class=m>3</span><span class=p>.</span><span class=k>pool</span><span class=p>.</span><span class=k>ntp</span><span class=p>.</span><span class=k>org</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 41</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 42</span><span class=cl><span class=c1>### Lock root - user will not be able to log in from the console
+</span></span></span><span class=line><span class=ln> 43</span><span class=cl><span class=k>rootpw</span> <span class=err>--</span><span class=k>lock</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 44</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 45</span><span class=cl><span class=c1>### Add a user that can login and escalate privileges.
+</span></span></span><span class=line><span class=ln> 46</span><span class=cl><span class=n>user --name</span><span class=o>=</span><span class=n>${build_username} --plaintext --password</span><span class=o>=</span><span class=n>${build_password} --groups</span><span class=o>=</span><span class=k>wheel</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 47</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 48</span><span class=cl><span class=c1>### Ensure SELinux State is Enforcing
+</span></span></span><span class=line><span class=ln> 49</span><span class=cl><span class=k>selinux</span> <span class=err>--</span><span class=k>enforcing</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 50</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 51</span><span class=cl><span class=c1>##########################
+</span></span></span><span class=line><span class=ln> 52</span><span class=cl><span class=c1>###   Disk Partition   ###
+</span></span></span><span class=line><span class=ln> 53</span><span class=cl><span class=c1>##########################
+</span></span></span><span class=line><span class=ln> 54</span><span class=cl><span class=k>clearpart</span> <span class=err>--</span><span class=k>all</span> <span class=err>--</span><span class=k>initlabel</span>
+</span></span><span class=line><span class=ln> 55</span><span class=cl><span class=n>part /boot --fstype xfs --size</span><span class=o>=</span><span class=m>512</span> <span class=err>--</span><span class=k>ondisk</span> <span class=k>sda</span>
+</span></span><span class=line><span class=ln> 56</span><span class=cl><span class=n>part pv.01 --size</span><span class=o>=</span><span class=m>1</span> <span class=err>--</span><span class=k>grow</span> <span class=err>--</span><span class=k>ondisk</span> <span class=k>sda</span>
+</span></span><span class=line><span class=ln> 57</span><span class=cl><span class=k>volgroup</span> <span class=k>vg_root</span> <span class=k>pv</span><span class=p>.</span><span class=m>01</span>
+</span></span><span class=line><span class=ln> 58</span><span class=cl>
+</span></span><span class=line><span class=ln> 59</span><span class=cl><span class=err>%</span>{ <span class=k>for</span> <span class=k>lv</span> <span class=k>in</span> <span class=k>lvm_layout</span> <span class=err>~</span>}
+</span></span><span class=line><span class=ln> 60</span><span class=cl><span class=n>logvol ${lv.mountpoint} --fstype ${lv.fstype} --vgname vg_root --name ${lv.name} --size</span><span class=o>=</span><span class=n>${lv.size} %{ if length(lv.fsoptions) &gt; 0 }--fsoptions</span><span class=o>=</span><span class=err>&#39;</span><span class=si>${</span><span class=nb>join</span><span class=p>(</span><span class=s2>&#34;,&#34;</span><span class=p>,</span> <span class=err>lv</span><span class=p>.</span><span class=err>fsoptions</span><span class=p>)</span><span class=si>}</span><span class=err>&#39;%</span>{ <span class=k>endif</span> }
+</span></span><span class=line><span class=ln> 61</span><span class=cl><span class=err>%</span>{ <span class=k>endfor</span> <span class=err>~</span>}<span class=c1>
+</span></span></span><span class=line><span class=ln> 62</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 63</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 64</span><span class=cl><span class=c1>##########################
+</span></span></span><span class=line><span class=ln> 65</span><span class=cl><span class=c1>### Packages selection ###
+</span></span></span><span class=line><span class=ln> 66</span><span class=cl><span class=c1>##########################
+</span></span></span><span class=line><span class=ln> 67</span><span class=cl><span class=err>%</span><span class=k>packages</span> <span class=err>--</span><span class=k>ignoremissing</span> <span class=err>--</span><span class=k>excludedocs</span>
+</span></span><span class=line><span class=ln> 68</span><span class=cl><span class=err>@</span><span class=k>core</span> <span class=err>--</span><span class=k>nodefaults</span>
+</span></span><span class=line><span class=ln> 69</span><span class=cl><span class=err>%</span>{ <span class=k>for</span> <span class=k>package</span> <span class=k>in</span> <span class=k>install_packages</span> <span class=err>~</span>}
+</span></span><span class=line><span class=ln> 70</span><span class=cl><span class=si>${</span><span class=err>package</span><span class=si>}</span>
+</span></span><span class=line><span class=ln> 71</span><span class=cl><span class=err>%</span>{ <span class=k>endfor</span> <span class=err>~</span>}
+</span></span><span class=line><span class=ln> 72</span><span class=cl><span class=err>%</span>{ <span class=k>for</span> <span class=k>package</span> <span class=k>in</span> <span class=k>uninstall_packages</span> <span class=err>~</span>}
+</span></span><span class=line><span class=ln> 73</span><span class=cl><span class=err>-</span><span class=si>${</span><span class=err>package</span><span class=si>}</span>
+</span></span><span class=line><span class=ln> 74</span><span class=cl><span class=err>%</span>{ <span class=k>endfor</span> <span class=err>~</span>}
+</span></span><span class=line><span class=ln> 75</span><span class=cl><span class=err>%</span><span class=k>end</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 76</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 77</span><span class=cl><span class=c1># Disable KDump Kernel Crash Analyzer
+</span></span></span><span class=line><span class=ln> 78</span><span class=cl><span class=err>%</span><span class=k>addon</span> <span class=k>com_redhat_kdump</span> <span class=err>--</span><span class=k>disable</span>
+</span></span><span class=line><span class=ln> 79</span><span class=cl><span class=err>%</span><span class=k>end</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 80</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 81</span><span class=cl><span class=c1>########################
+</span></span></span><span class=line><span class=ln> 82</span><span class=cl><span class=c1>###   Post install   ###
+</span></span></span><span class=line><span class=ln> 83</span><span class=cl><span class=c1>########################
+</span></span></span><span class=line><span class=ln> 84</span><span class=cl><span class=n>%post --log</span><span class=o>=</span><span class=err>/</span><span class=k>root</span><span class=err>/</span><span class=k>ks</span><span class=err>-</span><span class=k>post</span><span class=p>.</span><span class=k>log</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 85</span><span class=cl><span class=c1>#!/bin/bash
+</span></span></span><span class=line><span class=ln> 86</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 87</span><span class=cl><span class=c1># CCE-83857-3, CCE-83881-3, CCE-83891-2 - Add noexec, nodev, nosuid options to /dev/shm
+</span></span></span><span class=line><span class=ln> 88</span><span class=cl><span class=k>echo</span> <span class=s2>&#34;none    /dev/shm    tmpfs   nosuid,nodev,noexec   0 0&#34;</span> <span class=err>&gt;&gt;</span> <span class=err>/</span><span class=k>etc</span><span class=err>/</span><span class=k>fstab</span>
+</span></span><span class=line><span class=ln> 89</span><span class=cl>
+</span></span><span class=line><span class=ln> 90</span><span class=cl><span class=n>echo &#34;LANG</span><span class=o>=</span><span class=k>en_US</span><span class=p>.</span><span class=k>utf</span><span class=err>-</span><span class=m>8</span><span class=err>&#34;</span> <span class=err>&gt;&gt;</span> <span class=err>/</span><span class=k>etc</span><span class=err>/</span><span class=k>environment</span>
+</span></span><span class=line><span class=ln> 91</span><span class=cl><span class=n>echo &#34;LC_ALL</span><span class=o>=</span><span class=k>en_US</span><span class=p>.</span><span class=k>utf</span><span class=err>-</span><span class=m>8</span><span class=err>&#34;</span> <span class=err>&gt;&gt;</span> <span class=err>/</span><span class=k>etc</span><span class=err>/</span><span class=k>environment</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 92</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 93</span><span class=cl><span class=c1># Disable AllowZoneDrifting
+</span></span></span><span class=line><span class=ln> 94</span><span class=cl><span class=n>replace_or_append &#39;/etc/firewalld/firewalld.conf&#39; &#39;^AllowZoneDrifting&#39; &#39;no&#39; &#39;&#39; &#39;%s</span><span class=o>=</span><span class=err>%</span><span class=k>s</span><span class=err>&#39;</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 95</span><span class=cl><span class=c1># Remove cockpit service
+</span></span></span><span class=line><span class=ln> 96</span><span class=cl><span class=n>firewall-offline-cmd --remove-service</span><span class=o>=</span><span class=k>cockpit</span>
+</span></span><span class=line><span class=ln> 97</span><span class=cl>
+</span></span><span class=line><span class=ln> 98</span><span class=cl><span class=n>echo &#34;${build_username} ALL</span><span class=o>=</span><span class=p>(</span><span class=k>ALL</span><span class=p>)</span> <span class=k>NOPASSWD</span><span class=err>:</span> <span class=k>ALL</span><span class=err>&#34;</span> <span class=err>&gt;&gt;</span> <span class=err>/</span><span class=k>etc</span><span class=err>/</span><span class=k>sudoers</span><span class=p>.</span><span class=k>d</span><span class=err>/</span><span class=si>${</span><span class=err>build_username</span><span class=si>}</span>
+</span></span><span class=line><span class=ln> 99</span><span class=cl><span class=k>sed</span> <span class=err>-</span><span class=k>i</span> <span class=s2>&#34;s/^.*requiretty/#Defaults requiretty/&#34;</span> <span class=err>/</span><span class=k>etc</span><span class=err>/</span><span class=k>sudoers</span>
+</span></span><span class=line><span class=ln>100</span><span class=cl>
+</span></span><span class=line><span class=ln>101</span><span class=cl><span class=err>%</span><span class=k>end</span><span class=c1>
+</span></span></span><span class=line><span class=ln>102</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>103</span><span class=cl><span class=c1># Reboot after install
+</span></span></span><span class=line><span class=ln>104</span><span class=cl><span class=k>reboot</span> <span class=err>--</span><span class=k>eject</span></span></span></code></pre></div></div></div><h3 id=the-build-block>The Build Block</h3><p>The <code>build</code> block defines which builders will be run, which provisioning scripts will be executed, and what post-processing operations will be applied.
+In this scenario, we use only one builder - <code>vmware-iso.golden-image</code>.</p><p>Before exporting the image, an Ansible playbook is executed. It brings the virtual machine into compliance with the CIS Benchmark, cleans the image of unnecessary logs, and resets the machine ID.</p><p>We will place the configuration for this block in a separate file <code>rocky/build.pkr.hcl</code>:</p><div class=collapsibleHighlight><input id=collapsibleHighlight-1b0fdb1d4b16c53b checked type=checkbox class=collapsibleHighlight_toggle>
+<label for=collapsibleHighlight-1b0fdb1d4b16c53b class=collapsibleHighlight_label></label><pre class=collapsibleHighlight_code id=collapsibleHighlight-code-1b0fdb1d4b16c53b>build {
+  name    = &#34;golden-image&#34;
+  sources = [
+    &#34;sources.vmware-iso.golden-image&#34;,
+  ]
+  
+  provisioner &#34;ansible&#34; {
+    playbook_file    = &#34;${abspath(path.cwd)}/ansible/playbook.yaml&#34;
+    galaxy_file      = &#34;${abspath(path.cwd)}/ansible/requirements.yaml&#34;
+    roles_path       = &#34;${abspath(path.cwd)}/ansible/roles&#34;
+    collections_path = &#34;${abspath(path.cwd)}/ansible/collections&#34;
+    sftp_command     = &#34;/usr/libexec/openssh/sftp-server -e&#34; 
+    ansible_env_vars = [
+      &#34;ANSIBLE_CONFIG=${abspath(path.cwd)}/ansible/ansible.cfg&#34;,  
+    ]
+    extra_arguments = [
+      &#34;--scp-extra-args&#34;,
+      &#34;&#39;-O&#39;&#34;,
+    ]
+  }
+}</pre><div class=collapsibleHighlight_copy onclick='navigator.clipboard.writeText(document.getElementById("collapsibleHighlight-code-1b0fdb1d4b16c53b").textContent)'><svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linejoin="round" stroke-width="1.4" d="M9 8v3a1 1 0 01-1 1H5m11 4h2a1 1 0 001-1V5a1 1 0 00-1-1h-7a1 1 0 00-1 1v1m4 3v10a1 1 0 01-1 1H6a1 1 0 01-1-1v-7.13a1 1 0 01.24-.65L7.7 8.35A1 1 0 018.46 8H13a1 1 0 011 1z"/></svg></div><div class=collapsibleHighlight_lang>hcl, 21 lines</div><div class=collapsibleHighlight_wrapper><div class=highlight><pre tabindex=0 class=chroma><code class=language-hcl data-lang=hcl><span class=line><span class=ln> 1</span><span class=cl><span class=k>build</span> {
+</span></span><span class=line><span class=ln> 2</span><span class=cl><span class=n>  name</span>    <span class=o>=</span> <span class=s2>&#34;golden-image&#34;</span>
+</span></span><span class=line><span class=ln> 3</span><span class=cl><span class=n>  sources</span> <span class=o>=</span> <span class=p>[</span>
+</span></span><span class=line><span class=ln> 4</span><span class=cl>    <span class=s2>&#34;sources.vmware-iso.golden-image&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 5</span><span class=cl>  <span class=p>]</span>
+</span></span><span class=line><span class=ln> 6</span><span class=cl>  
+</span></span><span class=line><span class=ln> 7</span><span class=cl>  <span class=k>provisioner</span> <span class=s2>&#34;ansible&#34;</span> {
+</span></span><span class=line><span class=ln> 8</span><span class=cl><span class=n>    playbook_file</span>    <span class=o>=</span> <span class=s2>&#34;${abspath(path.cwd)}/ansible/playbook.yaml&#34;</span>
+</span></span><span class=line><span class=ln> 9</span><span class=cl><span class=n>    galaxy_file</span>      <span class=o>=</span> <span class=s2>&#34;${abspath(path.cwd)}/ansible/requirements.yaml&#34;</span>
+</span></span><span class=line><span class=ln>10</span><span class=cl><span class=n>    roles_path</span>       <span class=o>=</span> <span class=s2>&#34;${abspath(path.cwd)}/ansible/roles&#34;</span>
+</span></span><span class=line><span class=ln>11</span><span class=cl><span class=n>    collections_path</span> <span class=o>=</span> <span class=s2>&#34;${abspath(path.cwd)}/ansible/collections&#34;</span>
+</span></span><span class=line><span class=ln>12</span><span class=cl><span class=n>    sftp_command</span>     <span class=o>=</span> <span class=s2>&#34;/usr/libexec/openssh/sftp-server -e&#34;</span> 
+</span></span><span class=line><span class=ln>13</span><span class=cl>    <span class=n>ansible_env_vars</span> <span class=o>=</span> <span class=p>[</span>
+</span></span><span class=line><span class=ln>14</span><span class=cl><span class=n>      &#34;ANSIBLE_CONFIG</span><span class=o>=</span><span class=si>${</span><span class=err>abspath</span><span class=p>(</span><span class=err>path</span><span class=p>.</span><span class=err>cwd</span><span class=p>)</span><span class=si>}</span><span class=err>/</span><span class=k>ansible</span><span class=err>/</span><span class=k>ansible</span><span class=p>.</span><span class=k>cfg</span><span class=err>&#34;</span><span class=p>,</span>  
+</span></span><span class=line><span class=ln>15</span><span class=cl>    <span class=p>]</span>
+</span></span><span class=line><span class=ln>16</span><span class=cl><span class=n>    extra_arguments</span> <span class=o>=</span> <span class=p>[</span>
+</span></span><span class=line><span class=ln>17</span><span class=cl>      <span class=s2>&#34;--scp-extra-args&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>18</span><span class=cl>      <span class=s2>&#34;&#39;-O&#39;&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>19</span><span class=cl>    <span class=p>]</span>
+</span></span><span class=line><span class=ln>20</span><span class=cl>  }
+</span></span><span class=line><span class=ln>21</span><span class=cl>}</span></span></code></pre></div></div></div><h3 id=ansible-configuration>Ansible Configuration</h3><p>After Packer successfully installs the base OS using the Kickstart file and establishes an SSH connection, it hands over control to Ansible. At this stage, the final system configuration (provisioning) takes place.</p><p>As stated in the initial template requirements, we need to bring the system into compliance with CIS Benchmark policies and pre-install the Prometheus Node Exporter to collect metrics. Performing these tasks via bash scripts inside Kickstart is tedious and hard to maintain, which is why we delegate this to Ansible.</p><p>The main entry point for Packer is the <code>ansible/playbook.yaml</code> file. Here we apply the required roles:</p><div class=collapsibleHighlight><input id=collapsibleHighlight-65bbafbef28de745 checked type=checkbox class=collapsibleHighlight_toggle>
+<label for=collapsibleHighlight-65bbafbef28de745 class=collapsibleHighlight_label></label><pre class=collapsibleHighlight_code id=collapsibleHighlight-code-65bbafbef28de745>- name: Configure VM for CIS Benchmark
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    __authselect_custom_profile_name: custom-profile
+    __warning_banner: |
+      -- WARNING --
+      This system is for the use of authorized users only. Individuals
+      using this computer system without authority or in excess of their
+      authority are subject to having all their activities on this system
+      monitored and recorded by system personnel. Anyone using this
+      system expressly consents to such monitoring and is advised that
+      if such monitoring reveals possible evidence of criminal activity
+      system personal may provide the evidence of such monitoring to law
+      enforcement officials.
+    __auditd_max_log_file_action: rotate
+    __syslog: journald
+    __journald_systemmaxuse: 50M
+    __journald_systemkeepfree: 500M
+    __journald_runtimemaxuse: 50M
+    __journald_runtimekeepfree: 500M
+    __journald_maxfilesec: 5day
+    __sudo_timestamp_timeout: 5
+    __shell_session_timeout: 600
+  tasks:
+    - name: CIS Benchmark RHEL 8
+      vars:
+        # Disable rules
+        rhel8cis_rule_1_2_1: false # Ensure GPG keys are configured
+        rhel8cis_rule_1_3_1: false # Ensure bootloader password is set
+        rhel8cis_rule_4_3_4: false # Ensure users must provide password for escalation
+    
+        rhel8cis_authselect_custom_profile_name: &#34;{{ __authselect_custom_profile_name }}&#34;
+        rhel8cis_warning_banner: &#34;{{ __warning_banner }}&#34;
+        rhel8cis_auditd_max_log_file_action: &#34;{{ __auditd_max_log_file_action }}&#34;
+        rhel8cis_syslog: &#34;{{ __syslog }}&#34;
+        rhel8cis_journald_systemmaxuse: &#34;{{ __journald_systemmaxuse }}&#34;
+        rhel8cis_journald_systemkeepfree: &#34;{{ __journald_systemkeepfree }}&#34;
+        rhel8cis_journald_runtimemaxuse: &#34;{{ __journald_runtimemaxuse }}&#34;
+        rhel8cis_journald_runtimekeepfree: &#34;{{ __journald_runtimekeepfree }}&#34;
+        rhel8cis_journald_maxfilesec: &#34;{{ __journald_maxfilesec }}&#34;
+        rhel8cis_sudo_timestamp_timeout: &#34;{{ __sudo_timestamp_timeout }}&#34;
+        rhel8cis_shell_session_timeout: &#34;{{ __shell_session_timeout }}&#34;
+      when:
+        - ansible_facts.os_family == &#39;RedHat&#39; or ansible_facts.os_family == &#34;Rocky&#34;
+        - ansible_facts.distribution_major_version is version_compare(&#39;8&#39;, &#39;==&#39;)
+      ansible.builtin.include_role:
+          name: rhel8_cis
+
+    - name: CIS Benchmark RHEL 9
+      vars:
+        # Disable rules
+        rhel9cis_rule_1_1_1_9: false # Ensure unused filesystems kernel modules are not available
+        rhel9cis_rule_1_2_1_1: false # Ensure GPG keys are configured
+        rhel9cis_rule_1_4_1: false # Ensure bootloader password is set
+        rhel9cis_rule_5_2_4: false # Ensure users must provide password for escalation
+
+        rhel9cis_authselect_custom_profile_name: &#34;{{ __authselect_custom_profile_name }}&#34;
+        rhel9cis_warning_banner: &#34;{{ __warning_banner }}&#34;
+        rhel9cis_auditd_max_log_file_action: &#34;{{ __auditd_max_log_file_action }}&#34;
+        rhel9cis_syslog: &#34;{{ __syslog }}&#34;
+        rhel9cis_journald_systemmaxuse: &#34;{{ __journald_systemmaxuse }}&#34;
+        rhel9cis_journald_systemkeepfree: &#34;{{ __journald_systemkeepfree }}&#34;
+        rhel9cis_journald_runtimemaxuse: &#34;{{ __journald_runtimemaxuse }}&#34;
+        rhel9cis_journald_runtimekeepfree: &#34;{{ __journald_runtimekeepfree }}&#34;
+        rhel9cis_journald_maxfilesec: &#34;{{ __journald_maxfilesec }}&#34;
+        rhel9cis_sudo_timestamp_timeout: &#34;{{ __sudo_timestamp_timeout }}&#34;
+        rhel9cis_shell_session_timeout: &#34;{{ __shell_session_timeout }}&#34;
+      when:
+        - ansible_facts.os_family == &#39;RedHat&#39; or ansible_facts.os_family == &#34;Rocky&#34;
+        - ansible_facts.distribution_major_version is version_compare(&#39;9&#39;, &#39;==&#39;)
+      ansible.builtin.include_role:
+        name: rhel9_cis
+
+    - name: Install Prometheus Node Exporter
+      hosts: all
+      become: true
+      gather_facts: true
+      tags:
+        - node-exporter
+      tasks:
+        - name: Install node exporter
+          ansible.builtin.include_role:
+            name: prometheus.prometheus.node_exporter
+          vars:
+            node_exporter_version: 1.10.2
+            node_exporter_web_listen_address: &#34;0.0.0.0:9100&#34;
+            node_exporter_enabled_collectors:
+             - systemd
+             - processes
+      post_tasks:
+        - name: Collect facts about system services
+          ansible.builtin.service_facts:
+          register: services_state
+          changed_when: false
+
+        - name: Open node_exporter port
+          ansible.posix.firewalld:
+          port: 9100/tcp
+          zone: public
+          permanent: true
+          immediate: true
+          state: enabled
+          when:
+          - services_state.ansible_facts.services[&#39;firewalld.service&#39;].state == &#39;running&#39;
+
+    - name: Cleanup VM
+      hosts: all
+      become: true
+      gather_facts: true
+      roles:
+        - cleanup</pre><div class=collapsibleHighlight_copy onclick='navigator.clipboard.writeText(document.getElementById("collapsibleHighlight-code-65bbafbef28de745").textContent)'><svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linejoin="round" stroke-width="1.4" d="M9 8v3a1 1 0 01-1 1H5m11 4h2a1 1 0 001-1V5a1 1 0 00-1-1h-7a1 1 0 00-1 1v1m4 3v10a1 1 0 01-1 1H6a1 1 0 01-1-1v-7.13a1 1 0 01.24-.65L7.7 8.35A1 1 0 018.46 8H13a1 1 0 011 1z"/></svg></div><div class=collapsibleHighlight_lang>yaml, 113 lines</div><div class=collapsibleHighlight_wrapper><div class=highlight><pre tabindex=0 class=chroma><code class=language-yaml data-lang=yaml><span class=line><span class=ln>  1</span><span class=cl>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Configure VM for CIS Benchmark</span><span class=w>
+</span></span></span><span class=line><span class=ln>  2</span><span class=cl><span class=w>  </span><span class=nt>hosts</span><span class=p>:</span><span class=w> </span><span class=l>all</span><span class=w>
+</span></span></span><span class=line><span class=ln>  3</span><span class=cl><span class=w>  </span><span class=nt>become</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=ln>  4</span><span class=cl><span class=w>  </span><span class=nt>gather_facts</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=ln>  5</span><span class=cl><span class=w>  </span><span class=nt>vars</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln>  6</span><span class=cl><span class=w>    </span><span class=nt>__authselect_custom_profile_name</span><span class=p>:</span><span class=w> </span><span class=l>custom-profile</span><span class=w>
+</span></span></span><span class=line><span class=ln>  7</span><span class=cl><span class=w>    </span><span class=nt>__warning_banner</span><span class=p>:</span><span class=w> </span><span class=p>|</span><span class=sd>
+</span></span></span><span class=line><span class=ln>  8</span><span class=cl><span class=sd>      -- WARNING --
+</span></span></span><span class=line><span class=ln>  9</span><span class=cl><span class=sd>      This system is for the use of authorized users only. Individuals
+</span></span></span><span class=line><span class=ln> 10</span><span class=cl><span class=sd>      using this computer system without authority or in excess of their
+</span></span></span><span class=line><span class=ln> 11</span><span class=cl><span class=sd>      authority are subject to having all their activities on this system
+</span></span></span><span class=line><span class=ln> 12</span><span class=cl><span class=sd>      monitored and recorded by system personnel. Anyone using this
+</span></span></span><span class=line><span class=ln> 13</span><span class=cl><span class=sd>      system expressly consents to such monitoring and is advised that
+</span></span></span><span class=line><span class=ln> 14</span><span class=cl><span class=sd>      if such monitoring reveals possible evidence of criminal activity
+</span></span></span><span class=line><span class=ln> 15</span><span class=cl><span class=sd>      system personal may provide the evidence of such monitoring to law
+</span></span></span><span class=line><span class=ln> 16</span><span class=cl><span class=sd>      enforcement officials.</span><span class=w>
+</span></span></span><span class=line><span class=ln> 17</span><span class=cl><span class=w>    </span><span class=nt>__auditd_max_log_file_action</span><span class=p>:</span><span class=w> </span><span class=l>rotate</span><span class=w>
+</span></span></span><span class=line><span class=ln> 18</span><span class=cl><span class=w>    </span><span class=nt>__syslog</span><span class=p>:</span><span class=w> </span><span class=l>journald</span><span class=w>
+</span></span></span><span class=line><span class=ln> 19</span><span class=cl><span class=w>    </span><span class=nt>__journald_systemmaxuse</span><span class=p>:</span><span class=w> </span><span class=l>50M</span><span class=w>
+</span></span></span><span class=line><span class=ln> 20</span><span class=cl><span class=w>    </span><span class=nt>__journald_systemkeepfree</span><span class=p>:</span><span class=w> </span><span class=l>500M</span><span class=w>
+</span></span></span><span class=line><span class=ln> 21</span><span class=cl><span class=w>    </span><span class=nt>__journald_runtimemaxuse</span><span class=p>:</span><span class=w> </span><span class=l>50M</span><span class=w>
+</span></span></span><span class=line><span class=ln> 22</span><span class=cl><span class=w>    </span><span class=nt>__journald_runtimekeepfree</span><span class=p>:</span><span class=w> </span><span class=l>500M</span><span class=w>
+</span></span></span><span class=line><span class=ln> 23</span><span class=cl><span class=w>    </span><span class=nt>__journald_maxfilesec</span><span class=p>:</span><span class=w> </span><span class=l>5day</span><span class=w>
+</span></span></span><span class=line><span class=ln> 24</span><span class=cl><span class=w>    </span><span class=nt>__sudo_timestamp_timeout</span><span class=p>:</span><span class=w> </span><span class=m>5</span><span class=w>
+</span></span></span><span class=line><span class=ln> 25</span><span class=cl><span class=w>    </span><span class=nt>__shell_session_timeout</span><span class=p>:</span><span class=w> </span><span class=m>600</span><span class=w>
+</span></span></span><span class=line><span class=ln> 26</span><span class=cl><span class=w>  </span><span class=nt>tasks</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 27</span><span class=cl><span class=w>    </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>CIS Benchmark RHEL 8</span><span class=w>
+</span></span></span><span class=line><span class=ln> 28</span><span class=cl><span class=w>      </span><span class=nt>vars</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 29</span><span class=cl><span class=w>        </span><span class=c># Disable rules</span><span class=w>
+</span></span></span><span class=line><span class=ln> 30</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_rule_1_2_1</span><span class=p>:</span><span class=w> </span><span class=kc>false</span><span class=w> </span><span class=c># Ensure GPG keys are configured</span><span class=w>
+</span></span></span><span class=line><span class=ln> 31</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_rule_1_3_1</span><span class=p>:</span><span class=w> </span><span class=kc>false</span><span class=w> </span><span class=c># Ensure bootloader password is set</span><span class=w>
+</span></span></span><span class=line><span class=ln> 32</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_rule_4_3_4</span><span class=p>:</span><span class=w> </span><span class=kc>false</span><span class=w> </span><span class=c># Ensure users must provide password for escalation</span><span class=w>
+</span></span></span><span class=line><span class=ln> 33</span><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=ln> 34</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_authselect_custom_profile_name</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __authselect_custom_profile_name }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 35</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_warning_banner</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __warning_banner }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 36</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_auditd_max_log_file_action</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __auditd_max_log_file_action }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 37</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_syslog</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __syslog }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 38</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_journald_systemmaxuse</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_systemmaxuse }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 39</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_journald_systemkeepfree</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_systemkeepfree }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 40</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_journald_runtimemaxuse</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_runtimemaxuse }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 41</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_journald_runtimekeepfree</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_runtimekeepfree }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 42</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_journald_maxfilesec</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_maxfilesec }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 43</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_sudo_timestamp_timeout</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __sudo_timestamp_timeout }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 44</span><span class=cl><span class=w>        </span><span class=nt>rhel8cis_shell_session_timeout</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __shell_session_timeout }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 45</span><span class=cl><span class=w>      </span><span class=nt>when</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 46</span><span class=cl><span class=w>        </span>- <span class=l>ansible_facts.os_family == &#39;RedHat&#39; or ansible_facts.os_family == &#34;Rocky&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 47</span><span class=cl><span class=w>        </span>- <span class=l>ansible_facts.distribution_major_version is version_compare(&#39;8&#39;, &#39;==&#39;)</span><span class=w>
+</span></span></span><span class=line><span class=ln> 48</span><span class=cl><span class=w>      </span><span class=nt>ansible.builtin.include_role</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 49</span><span class=cl><span class=w>          </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>rhel8_cis</span><span class=w>
+</span></span></span><span class=line><span class=ln> 50</span><span class=cl><span class=w>
+</span></span></span><span class=line><span class=ln> 51</span><span class=cl><span class=w>    </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>CIS Benchmark RHEL 9</span><span class=w>
+</span></span></span><span class=line><span class=ln> 52</span><span class=cl><span class=w>      </span><span class=nt>vars</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 53</span><span class=cl><span class=w>        </span><span class=c># Disable rules</span><span class=w>
+</span></span></span><span class=line><span class=ln> 54</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_rule_1_1_1_9</span><span class=p>:</span><span class=w> </span><span class=kc>false</span><span class=w> </span><span class=c># Ensure unused filesystems kernel modules are not available</span><span class=w>
+</span></span></span><span class=line><span class=ln> 55</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_rule_1_2_1_1</span><span class=p>:</span><span class=w> </span><span class=kc>false</span><span class=w> </span><span class=c># Ensure GPG keys are configured</span><span class=w>
+</span></span></span><span class=line><span class=ln> 56</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_rule_1_4_1</span><span class=p>:</span><span class=w> </span><span class=kc>false</span><span class=w> </span><span class=c># Ensure bootloader password is set</span><span class=w>
+</span></span></span><span class=line><span class=ln> 57</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_rule_5_2_4</span><span class=p>:</span><span class=w> </span><span class=kc>false</span><span class=w> </span><span class=c># Ensure users must provide password for escalation</span><span class=w>
+</span></span></span><span class=line><span class=ln> 58</span><span class=cl><span class=w>
+</span></span></span><span class=line><span class=ln> 59</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_authselect_custom_profile_name</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __authselect_custom_profile_name }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 60</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_warning_banner</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __warning_banner }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 61</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_auditd_max_log_file_action</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __auditd_max_log_file_action }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 62</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_syslog</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __syslog }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 63</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_journald_systemmaxuse</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_systemmaxuse }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 64</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_journald_systemkeepfree</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_systemkeepfree }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 65</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_journald_runtimemaxuse</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_runtimemaxuse }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 66</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_journald_runtimekeepfree</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_runtimekeepfree }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 67</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_journald_maxfilesec</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __journald_maxfilesec }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 68</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_sudo_timestamp_timeout</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __sudo_timestamp_timeout }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 69</span><span class=cl><span class=w>        </span><span class=nt>rhel9cis_shell_session_timeout</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;{{ __shell_session_timeout }}&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 70</span><span class=cl><span class=w>      </span><span class=nt>when</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 71</span><span class=cl><span class=w>        </span>- <span class=l>ansible_facts.os_family == &#39;RedHat&#39; or ansible_facts.os_family == &#34;Rocky&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 72</span><span class=cl><span class=w>        </span>- <span class=l>ansible_facts.distribution_major_version is version_compare(&#39;9&#39;, &#39;==&#39;)</span><span class=w>
+</span></span></span><span class=line><span class=ln> 73</span><span class=cl><span class=w>      </span><span class=nt>ansible.builtin.include_role</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 74</span><span class=cl><span class=w>        </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>rhel9_cis</span><span class=w>
+</span></span></span><span class=line><span class=ln> 75</span><span class=cl><span class=w>
+</span></span></span><span class=line><span class=ln> 76</span><span class=cl><span class=w>    </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Install Prometheus Node Exporter</span><span class=w>
+</span></span></span><span class=line><span class=ln> 77</span><span class=cl><span class=w>      </span><span class=nt>hosts</span><span class=p>:</span><span class=w> </span><span class=l>all</span><span class=w>
+</span></span></span><span class=line><span class=ln> 78</span><span class=cl><span class=w>      </span><span class=nt>become</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=ln> 79</span><span class=cl><span class=w>      </span><span class=nt>gather_facts</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=ln> 80</span><span class=cl><span class=w>      </span><span class=nt>tags</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 81</span><span class=cl><span class=w>        </span>- <span class=l>node-exporter</span><span class=w>
+</span></span></span><span class=line><span class=ln> 82</span><span class=cl><span class=w>      </span><span class=nt>tasks</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 83</span><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Install node exporter</span><span class=w>
+</span></span></span><span class=line><span class=ln> 84</span><span class=cl><span class=w>          </span><span class=nt>ansible.builtin.include_role</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 85</span><span class=cl><span class=w>            </span><span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>prometheus.prometheus.node_exporter</span><span class=w>
+</span></span></span><span class=line><span class=ln> 86</span><span class=cl><span class=w>          </span><span class=nt>vars</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 87</span><span class=cl><span class=w>            </span><span class=nt>node_exporter_version</span><span class=p>:</span><span class=w> </span><span class=m>1.10.2</span><span class=w>
+</span></span></span><span class=line><span class=ln> 88</span><span class=cl><span class=w>            </span><span class=nt>node_exporter_web_listen_address</span><span class=p>:</span><span class=w> </span><span class=s2>&#34;0.0.0.0:9100&#34;</span><span class=w>
+</span></span></span><span class=line><span class=ln> 89</span><span class=cl><span class=w>            </span><span class=nt>node_exporter_enabled_collectors</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 90</span><span class=cl><span class=w>             </span>- <span class=l>systemd</span><span class=w>
+</span></span></span><span class=line><span class=ln> 91</span><span class=cl><span class=w>             </span>- <span class=l>processes</span><span class=w>
+</span></span></span><span class=line><span class=ln> 92</span><span class=cl><span class=w>      </span><span class=nt>post_tasks</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 93</span><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Collect facts about system services</span><span class=w>
+</span></span></span><span class=line><span class=ln> 94</span><span class=cl><span class=w>          </span><span class=nt>ansible.builtin.service_facts</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln> 95</span><span class=cl><span class=w>          </span><span class=nt>register</span><span class=p>:</span><span class=w> </span><span class=l>services_state</span><span class=w>
+</span></span></span><span class=line><span class=ln> 96</span><span class=cl><span class=w>          </span><span class=nt>changed_when</span><span class=p>:</span><span class=w> </span><span class=kc>false</span><span class=w>
+</span></span></span><span class=line><span class=ln> 97</span><span class=cl><span class=w>
+</span></span></span><span class=line><span class=ln> 98</span><span class=cl><span class=w>        </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Open node_exporter port</span><span class=w>
+</span></span></span><span class=line><span class=ln> 99</span><span class=cl><span class=w>          </span><span class=nt>ansible.posix.firewalld</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln>100</span><span class=cl><span class=w>          </span><span class=nt>port</span><span class=p>:</span><span class=w> </span><span class=m>9100</span><span class=l>/tcp</span><span class=w>
+</span></span></span><span class=line><span class=ln>101</span><span class=cl><span class=w>          </span><span class=nt>zone</span><span class=p>:</span><span class=w> </span><span class=l>public</span><span class=w>
+</span></span></span><span class=line><span class=ln>102</span><span class=cl><span class=w>          </span><span class=nt>permanent</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=ln>103</span><span class=cl><span class=w>          </span><span class=nt>immediate</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=ln>104</span><span class=cl><span class=w>          </span><span class=nt>state</span><span class=p>:</span><span class=w> </span><span class=l>enabled</span><span class=w>
+</span></span></span><span class=line><span class=ln>105</span><span class=cl><span class=w>          </span><span class=nt>when</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln>106</span><span class=cl><span class=w>          </span>- <span class=l>services_state.ansible_facts.services[&#39;firewalld.service&#39;].state == &#39;running&#39;</span><span class=w>
+</span></span></span><span class=line><span class=ln>107</span><span class=cl><span class=w>
+</span></span></span><span class=line><span class=ln>108</span><span class=cl><span class=w>    </span>- <span class=nt>name</span><span class=p>:</span><span class=w> </span><span class=l>Cleanup VM</span><span class=w>
+</span></span></span><span class=line><span class=ln>109</span><span class=cl><span class=w>      </span><span class=nt>hosts</span><span class=p>:</span><span class=w> </span><span class=l>all</span><span class=w>
+</span></span></span><span class=line><span class=ln>110</span><span class=cl><span class=w>      </span><span class=nt>become</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=ln>111</span><span class=cl><span class=w>      </span><span class=nt>gather_facts</span><span class=p>:</span><span class=w> </span><span class=kc>true</span><span class=w>
+</span></span></span><span class=line><span class=ln>112</span><span class=cl><span class=w>      </span><span class=nt>roles</span><span class=p>:</span><span class=w>
+</span></span></span><span class=line><span class=ln>113</span><span class=cl><span class=w>        </span>- <span class=l>cleanup</span></span></span></code></pre></div></div></div><h3 id=variables-block>Variables Block</h3><p>All variables that will be used to build the template are defined in the <code>rocky/variables.pkr.hcl</code> file. We provide default values for most variables. This allows us to start a build without having to define a huge number of variables, while still preserving the flexibility to customize the template.</p><div class=collapsibleHighlight><input id=collapsibleHighlight-288737b9eea8c5d7 checked type=checkbox class=collapsibleHighlight_toggle>
+<label for=collapsibleHighlight-288737b9eea8c5d7 class=collapsibleHighlight_label></label><pre class=collapsibleHighlight_code id=collapsibleHighlight-code-288737b9eea8c5d7>variable &#34;rocky_version&#34; {
+  type    = string
+  default = &#34;9.7&#34;
+}
+
+variable &#34;rocky_repository_url&#34; {
+  description = &#34;Repo list&#34;
+  type        = string
+  default     = &#34;https://dl.rockylinux.org/pub/rocky&#34;
+}
+
+# See https://knowledge.broadcom.com/external/article?articleNumber=315655
+variable &#34;vmware_virtual_hardware_version&#34; {
+  description = &#34;The virtual machine hardware version&#34;
+  type        = number
+  default     = 21
+}
+
+# See https://knowledge.broadcom.com/external/article?articleNumber=321876
+variable &#34;vmware_guest_os_type&#34; {
+  description = &#34;The guest operating system identifier for the virtual machine&#34;
+  type        = string
+  default     = &#34;rhel9_64Guest&#34;
+}
+
+# Hardware configuration
+variable &#34;cpus&#34; {
+  description = &#34;The number of virtual CPUs cores for the virtual machine&#34;
+  type        = number
+  default     = 1
+}
+
+variable &#34;cores&#34; {
+  description = &#34;The number of virtual CPU cores per socket for the virtual machine&#34;
+  type        = number
+  default     = 1
+}
+
+variable &#34;memory&#34; {
+  description = &#34;The amount of memory to use for building the VM in megabytes&#34;
+  type        = number
+  default     = 2048
+}
+
+variable &#34;disk_size&#34; {
+  description = &#34;The size, in megabytes, of the hard disk to create for the VM&#34;
+  type        = number
+  default     = 20480
+}
+
+variable &#34;provisioner_username&#34; {
+  description = &#34;Setup provisioner username&#34;
+  type        = string
+  sensitive   = true
+  default     = &#34;packer&#34;
+}
+
+variable &#34;provisioner_password&#34; {
+  description = &#34;Setup provisioner password&#34;
+  type        = string
+  sensitive   = true
+}
+
+# Template configuration
+variable &#34;lvm_layout&#34; {
+  description = &#34;Root disk LVM layout&#34;
+  type        = list(object({
+    mountpoint = string
+    name       = string
+    size       = number
+    fstype     = string
+    grow       = bool
+    fsoptions  = list(string)
+  }))
+
+  default = [
+    {
+      mountpoint : &#34;/&#34;,
+      name : &#34;root&#34;,
+      size : &#34;5120&#34;,
+      fstype : &#34;xfs&#34;,
+      grow : false,
+      fsoptions : [],
+    },
+
+    {
+      mountpoint : &#34;swap&#34;,
+      name : &#34;swap&#34;,
+      size : &#34;1024&#34;,
+      fstype : &#34;swap&#34;,
+      grow : false,
+      fsoptions : [],
+    },
+
+    # CCE-83468-9 - Ensure /home Located On Separate Partition
+    {
+      mountpoint : &#34;/home&#34;,
+      name : &#34;home&#34;,
+      size : &#34;1024&#34;,
+      fstype : &#34;xfs&#34;,
+      grow : true,
+      fsoptions : [
+        # CCE-83871-4 - Add nodev Option to /home
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_home_nodev
+        &#34;nodev&#34;,
+        # CCE-83894-6 - Add nosuid Option to /home
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_home_nosuid
+        &#34;nosuid&#34;,
+      ],
+    },
+
+    # CCE-90845-9 - Ensure /tmp Located On Separate Partition
+    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_tmp
+    {
+      mountpoint : &#34;/tmp&#34;,
+      name : &#34;tmp&#34;,
+      size : &#34;2048&#34;,
+      fstype : &#34;xfs&#34;,
+      grow : false,
+      fsoptions : [
+        # CCE-83869-8 - Add nodev Option to /tmp
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_tmp_nodev
+        &#34;nodev&#34;,
+        # CCE-83872-2 - Add nosuid Option to /tmp
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_tmp_nosuid
+        &#34;nosuid&#34;,
+        # CCE-83885-4 - Add noexec Option to /tmp
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_tmp_noexec
+        &#34;noexec&#34;,
+      ],
+    },
+
+    # CCE-83466-3 - Ensure /var Located On Separate Partition
+    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_var
+    {
+      mountpoint : &#34;/var&#34;,
+      name : &#34;var&#34;,
+      size : &#34;2048&#34;,
+      fstype : &#34;xfs&#34;,
+      grow : false,
+      fsoptions : [
+        # CCE-83868-0 - Add nodev Option to /var
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_nodev
+        &#34;nodev&#34;,
+        # CCE-83865-6 - Add noexec Option to /var
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_noexec
+        &#34;noexec&#34;,
+        # CCE-83867-2 - Add nosuid Option to /var
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_nosuid
+        &#34;nosuid&#34;
+      ],
+    },
+
+    # CCE-90848-3 - Ensure /var/log Located On Separate Partition
+    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_var_log
+    {
+      mountpoint : &#34;/var/log&#34;,
+      name : &#34;log&#34;,
+      size : &#34;4096&#34;,
+      fstype : &#34;xfs&#34;,
+      grow : false,
+      fsoptions : [
+        # CCE-83886-2 - Add nodev Option to /var/log
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_nodev
+        &#34;nodev&#34;,
+        #  CCE-83887-0 - Add noexec Option to /var/log
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_noexec
+        &#34;noexec&#34;,
+        # CCE-83870-6 - Add nosuid Option to /var/log
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_nosuid
+        &#34;nosuid&#34;,
+      ],
+    },
+
+    # CCE-90847-5 - Ensure /var/log/audit Located On Separate Partition
+    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_var_log_audit
+    {
+      mountpoint : &#34;/var/log/audit&#34;,
+      name : &#34;audit&#34;,
+      size : &#34;1024&#34;,
+      fstype : &#34;xfs&#34;,
+      grow : false,
+      fsoptions : [
+        # CCE-83882-1 - Add nodev Option to /var/log/audit
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_audit_nodev
+        &#34;nodev&#34;,
+        # CCE-83878-9 - Add noexec Option to /var/log/audit
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_audit_noexec
+        &#34;noexec&#34;,
+        # CCE-83893-8 - Add nosuid Option to /var/log/audit
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_audit_nosuid
+        &#34;nosuid&#34;,
+      ],
+    },
+
+    # CCE-83487-9 - Ensure /var/tmp Located On Separate Partition
+    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_var_tmp
+    {
+      mountpoint : &#34;/var/tmp&#34;,
+      name : &#34;vartmp&#34;,
+      size : &#34;2048&#34;,
+      fstype : &#34;xfs&#34;,
+      grow : false,
+      fsoptions : [
+        # CCE-83864-9 - Add nodev Option to /var/tmp
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_tmp_nodev
+        &#34;nodev&#34;,
+        # CCE-83866-4 - Add noexec Option to /var/tmp
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_tmp_noexec
+        &#34;noexec&#34;,
+        # CCE-83863-1 - Add nosuid Option to /var/tmp
+        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_tmp_nosuid
+        &#34;nosuid&#34;,
+      ],
+    },
+  ]
+}
+
+variable &#34;install_packages&#34; {
+  type        = list(string)
+  description = &#34;Packages list ensure to be installed&#34;
+  default     = [
+    &#34;bash-completion&#34;,
+    &#34;tar&#34;,
+    &#34;vim&#34;,
+    &#34;htop&#34;,
+
+    # VMware tools and dependencies
+    &#34;open-vm-tools&#34;,
+    &#34;perl&#34;,
+    
+    # CCE-90843-4 Install AIDE https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_aide_installed
+    &#34;aide&#34;,
+    # CCE-83523-1 Install sudo Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_sudo_installed
+    &#34;sudo&#34;,
+    # CCE-83649-4 Ensure the audit Subsystem is Installed https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_audit_installed
+    &#34;audit&#34;,
+    # CCE-84063-7 Ensure rsyslog is Installed https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_rsyslog_installed
+    &#34;rsyslog&#34;,
+    # CCE-84021-5 Install firewalld Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_firewalld_installed
+    &#34;firewalld&#34;,
+    # CCE-84069-4 Install libselinux Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_libselinux_installed
+    &#34;libselinux&#34;,
+  ]
+}
+
+variable &#34;uninstall_packages&#34; {
+  type        = list(string)
+  description = &#34;Packages list ensure to be uninstalled&#34;
+  default     = [
+    # unnecessary firmware
+    &#34;aic94xx-firmware&#34;,
+    &#34;atmel-firmware&#34;,
+    &#34;b43-openfwwf&#34;,
+    &#34;bfa-firmware&#34;,
+    &#34;ipw2100-firmware&#34;,
+    &#34;ipw2200-firmware&#34;,
+    &#34;ivtv-firmware&#34;,
+    &#34;iwl*-firmware&#34;,
+    &#34;libertas-usb8388-firmware&#34;,
+    &#34;ql*-firmware&#34;,
+    &#34;rt61pci-firmware&#34;,
+    &#34;rt73usb-firmware&#34;,
+    &#34;xorg-x11-drv-ati-firmware&#34;,
+    &#34;zd1211-firmware&#34;,
+    &#34;cockpit&#34;,
+    &#34;alsa-*&#34;,
+    &#34;fprintd-pam&#34;,
+    &#34;intltool&#34;,
+    &#34;microcode_ctl&#34;,
+
+    # CCE-84072-8 Uninstall mcstrans Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_mcstrans_removed
+    &#34;mcstrans&#34;,
+    # CCE-84073-6 Uninstall setroubleshoot Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_setroubleshoot_removed
+    &#34;setroubleshoot&#34;,
+    # CCE-84159-3 Uninstall vsftpd Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_vsftpd_removed
+    &#34;vsftpd&#34;,
+    # CCE-85974-4 Uninstall httpd Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_httpd_removed
+    &#34;httpd&#34;,
+    # CCE-85977-7 Uninstall dovecot Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_dovecot_removed
+    &#34;dovecot&#34;,
+    # CCE-90831-9 Ensure LDAP client is not installed https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_openldap-clients_removed
+    &#34;openldap-clients&#34;,
+    # CCE-84155-1 Uninstall xinetd Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_xinetd_removed
+    &#34;xinetd&#34;,
+    # CCE-84151-0 Remove NIS Client https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_ypbind_removed
+    &#34;ypbind&#34;,
+    # CCE-84152-8 Uninstall ypserv Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_ypserv_removed
+    &#34;ypserv&#34;,
+    # CCE-84142-9 Uninstall rsh Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_rsh_removed
+    &#34;rsh&#34;,
+    # CCE-84157-7 Uninstall talk Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_talk_removed
+    &#34;talk&#34;,
+    # CCE-84149-4 Uninstall telnet-server Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_telnet-server_removed
+    &#34;telnet-server&#34;,
+    # CCE-84146-0 Remove telnet Clients https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_telnet_removed
+    &#34;telnet&#34;,
+    # CCE-84154-4 Uninstall tftp-server Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_tftp-server_removed
+    &#34;tftp-server&#34;,
+    # CCE-84153-6 Remove tftp Daemon https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_tftp_removed
+    &#34;tftp&#34;,
+    # CCE-84238-5 Uninstall squid Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_squid_removed
+    &#34;squid&#34;,
+    # CCE-85981-9 Uninstall net-snmp Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_net-snmp_removed
+    &#34;net-snmp&#34;,
+    # CCE-84104-9 Remove the X Windows Package Group https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_xorg-x11-server-common_removed
+    &#34;xorg-x11-server-common&#34;,
+  ]
+}
+
+variable &#34;guest_timezone&#34; {
+  type    = string
+  default = &#34;UTC&#34;
+}</pre><div class=collapsibleHighlight_copy onclick='navigator.clipboard.writeText(document.getElementById("collapsibleHighlight-code-288737b9eea8c5d7").textContent)'><svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linejoin="round" stroke-width="1.4" d="M9 8v3a1 1 0 01-1 1H5m11 4h2a1 1 0 001-1V5a1 1 0 00-1-1h-7a1 1 0 00-1 1v1m4 3v10a1 1 0 01-1 1H6a1 1 0 01-1-1v-7.13a1 1 0 01.24-.65L7.7 8.35A1 1 0 018.46 8H13a1 1 0 011 1z"/></svg></div><div class=collapsibleHighlight_lang>hcl, 314 lines</div><div class=collapsibleHighlight_wrapper><div class=highlight><pre tabindex=0 class=chroma><code class=language-hcl data-lang=hcl><span class=line><span class=ln>  1</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;rocky_version&#34;</span> {
+</span></span><span class=line><span class=ln>  2</span><span class=cl><span class=n>  type</span>    <span class=o>=</span> <span class=k>string</span>
+</span></span><span class=line><span class=ln>  3</span><span class=cl><span class=n>  default</span> <span class=o>=</span> <span class=s2>&#34;9.7&#34;</span>
+</span></span><span class=line><span class=ln>  4</span><span class=cl>}
+</span></span><span class=line><span class=ln>  5</span><span class=cl>
+</span></span><span class=line><span class=ln>  6</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;rocky_repository_url&#34;</span> {
+</span></span><span class=line><span class=ln>  7</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;Repo list&#34;</span>
+</span></span><span class=line><span class=ln>  8</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>string</span>
+</span></span><span class=line><span class=ln>  9</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=s2>&#34;https://dl.rockylinux.org/pub/rocky&#34;</span>
+</span></span><span class=line><span class=ln> 10</span><span class=cl>}<span class=c1>
+</span></span></span><span class=line><span class=ln> 11</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 12</span><span class=cl><span class=c1># See https://knowledge.broadcom.com/external/article?articleNumber=315655
+</span></span></span><span class=line><span class=ln> 13</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;vmware_virtual_hardware_version&#34;</span> {
+</span></span><span class=line><span class=ln> 14</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;The virtual machine hardware version&#34;</span>
+</span></span><span class=line><span class=ln> 15</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>number</span>
+</span></span><span class=line><span class=ln> 16</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=m>21</span>
+</span></span><span class=line><span class=ln> 17</span><span class=cl>}<span class=c1>
+</span></span></span><span class=line><span class=ln> 18</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 19</span><span class=cl><span class=c1># See https://knowledge.broadcom.com/external/article?articleNumber=321876
+</span></span></span><span class=line><span class=ln> 20</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;vmware_guest_os_type&#34;</span> {
+</span></span><span class=line><span class=ln> 21</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;The guest operating system identifier for the virtual machine&#34;</span>
+</span></span><span class=line><span class=ln> 22</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>string</span>
+</span></span><span class=line><span class=ln> 23</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=s2>&#34;rhel9_64Guest&#34;</span>
+</span></span><span class=line><span class=ln> 24</span><span class=cl>}<span class=c1>
+</span></span></span><span class=line><span class=ln> 25</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 26</span><span class=cl><span class=c1># Hardware configuration
+</span></span></span><span class=line><span class=ln> 27</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;cpus&#34;</span> {
+</span></span><span class=line><span class=ln> 28</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;The number of virtual CPUs cores for the virtual machine&#34;</span>
+</span></span><span class=line><span class=ln> 29</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>number</span>
+</span></span><span class=line><span class=ln> 30</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=m>1</span>
+</span></span><span class=line><span class=ln> 31</span><span class=cl>}
+</span></span><span class=line><span class=ln> 32</span><span class=cl>
+</span></span><span class=line><span class=ln> 33</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;cores&#34;</span> {
+</span></span><span class=line><span class=ln> 34</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;The number of virtual CPU cores per socket for the virtual machine&#34;</span>
+</span></span><span class=line><span class=ln> 35</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>number</span>
+</span></span><span class=line><span class=ln> 36</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=m>1</span>
+</span></span><span class=line><span class=ln> 37</span><span class=cl>}
+</span></span><span class=line><span class=ln> 38</span><span class=cl>
+</span></span><span class=line><span class=ln> 39</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;memory&#34;</span> {
+</span></span><span class=line><span class=ln> 40</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;The amount of memory to use for building the VM in megabytes&#34;</span>
+</span></span><span class=line><span class=ln> 41</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>number</span>
+</span></span><span class=line><span class=ln> 42</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=m>2048</span>
+</span></span><span class=line><span class=ln> 43</span><span class=cl>}
+</span></span><span class=line><span class=ln> 44</span><span class=cl>
+</span></span><span class=line><span class=ln> 45</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;disk_size&#34;</span> {
+</span></span><span class=line><span class=ln> 46</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;The size, in megabytes, of the hard disk to create for the VM&#34;</span>
+</span></span><span class=line><span class=ln> 47</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>number</span>
+</span></span><span class=line><span class=ln> 48</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=m>20480</span>
+</span></span><span class=line><span class=ln> 49</span><span class=cl>}
+</span></span><span class=line><span class=ln> 50</span><span class=cl>
+</span></span><span class=line><span class=ln> 51</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;provisioner_username&#34;</span> {
+</span></span><span class=line><span class=ln> 52</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;Setup provisioner username&#34;</span>
+</span></span><span class=line><span class=ln> 53</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>string</span>
+</span></span><span class=line><span class=ln> 54</span><span class=cl><span class=n>  sensitive</span>   <span class=o>=</span> <span class=kt>true</span>
+</span></span><span class=line><span class=ln> 55</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=s2>&#34;packer&#34;</span>
+</span></span><span class=line><span class=ln> 56</span><span class=cl>}
+</span></span><span class=line><span class=ln> 57</span><span class=cl>
+</span></span><span class=line><span class=ln> 58</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;provisioner_password&#34;</span> {
+</span></span><span class=line><span class=ln> 59</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;Setup provisioner password&#34;</span>
+</span></span><span class=line><span class=ln> 60</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>string</span>
+</span></span><span class=line><span class=ln> 61</span><span class=cl><span class=n>  sensitive</span>   <span class=o>=</span> <span class=kt>true</span>
+</span></span><span class=line><span class=ln> 62</span><span class=cl>}<span class=c1>
+</span></span></span><span class=line><span class=ln> 63</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 64</span><span class=cl><span class=c1># Template configuration
+</span></span></span><span class=line><span class=ln> 65</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;lvm_layout&#34;</span> {
+</span></span><span class=line><span class=ln> 66</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;Root disk LVM layout&#34;</span>
+</span></span><span class=line><span class=ln> 67</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>list</span><span class=p>(</span><span class=k>object</span><span class=p>(</span>{
+</span></span><span class=line><span class=ln> 68</span><span class=cl><span class=n>    mountpoint</span> <span class=o>=</span> <span class=k>string</span>
+</span></span><span class=line><span class=ln> 69</span><span class=cl><span class=n>    name</span>       <span class=o>=</span> <span class=k>string</span>
+</span></span><span class=line><span class=ln> 70</span><span class=cl><span class=n>    size</span>       <span class=o>=</span> <span class=k>number</span>
+</span></span><span class=line><span class=ln> 71</span><span class=cl><span class=n>    fstype</span>     <span class=o>=</span> <span class=k>string</span>
+</span></span><span class=line><span class=ln> 72</span><span class=cl><span class=n>    grow</span>       <span class=o>=</span> <span class=k>bool</span>
+</span></span><span class=line><span class=ln> 73</span><span class=cl><span class=n>    fsoptions</span>  <span class=o>=</span> <span class=k>list</span><span class=p>(</span><span class=k>string</span><span class=p>)</span>
+</span></span><span class=line><span class=ln> 74</span><span class=cl>  }<span class=p>))</span>
+</span></span><span class=line><span class=ln> 75</span><span class=cl>
+</span></span><span class=line><span class=ln> 76</span><span class=cl><span class=n>  default</span> <span class=o>=</span> <span class=p>[</span>
+</span></span><span class=line><span class=ln> 77</span><span class=cl>    {
+</span></span><span class=line><span class=ln> 78</span><span class=cl>      <span class=k>mountpoint</span> <span class=err>:</span> <span class=s2>&#34;/&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 79</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;root&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 80</span><span class=cl>      <span class=k>size</span> <span class=err>:</span> <span class=s2>&#34;5120&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 81</span><span class=cl>      <span class=k>fstype</span> <span class=err>:</span> <span class=s2>&#34;xfs&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 82</span><span class=cl>      <span class=k>grow</span> <span class=err>:</span> <span class=kt>false</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 83</span><span class=cl>      <span class=k>fsoptions</span> <span class=err>:</span> <span class=p>[],</span>
+</span></span><span class=line><span class=ln> 84</span><span class=cl>    }<span class=p>,</span>
+</span></span><span class=line><span class=ln> 85</span><span class=cl>
+</span></span><span class=line><span class=ln> 86</span><span class=cl>    {
+</span></span><span class=line><span class=ln> 87</span><span class=cl>      <span class=k>mountpoint</span> <span class=err>:</span> <span class=s2>&#34;swap&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 88</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;swap&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 89</span><span class=cl>      <span class=k>size</span> <span class=err>:</span> <span class=s2>&#34;1024&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 90</span><span class=cl>      <span class=k>fstype</span> <span class=err>:</span> <span class=s2>&#34;swap&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 91</span><span class=cl>      <span class=k>grow</span> <span class=err>:</span> <span class=kt>false</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 92</span><span class=cl>      <span class=k>fsoptions</span> <span class=err>:</span> <span class=p>[],</span>
+</span></span><span class=line><span class=ln> 93</span><span class=cl>    }<span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln> 94</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln> 95</span><span class=cl><span class=c1>    # CCE-83468-9 - Ensure /home Located On Separate Partition
+</span></span></span><span class=line><span class=ln> 96</span><span class=cl>    {
+</span></span><span class=line><span class=ln> 97</span><span class=cl>      <span class=k>mountpoint</span> <span class=err>:</span> <span class=s2>&#34;/home&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 98</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;home&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln> 99</span><span class=cl>      <span class=k>size</span> <span class=err>:</span> <span class=s2>&#34;1024&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>100</span><span class=cl>      <span class=k>fstype</span> <span class=err>:</span> <span class=s2>&#34;xfs&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>101</span><span class=cl>      <span class=k>grow</span> <span class=err>:</span> <span class=kt>true</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>102</span><span class=cl>      <span class=k>fsoptions</span> <span class=err>:</span> <span class=p>[</span><span class=c1>
+</span></span></span><span class=line><span class=ln>103</span><span class=cl><span class=c1>        # CCE-83871-4 - Add nodev Option to /home
+</span></span></span><span class=line><span class=ln>104</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_home_nodev
+</span></span></span><span class=line><span class=ln>105</span><span class=cl>        <span class=s2>&#34;nodev&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>106</span><span class=cl><span class=c1>        # CCE-83894-6 - Add nosuid Option to /home
+</span></span></span><span class=line><span class=ln>107</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_home_nosuid
+</span></span></span><span class=line><span class=ln>108</span><span class=cl>        <span class=s2>&#34;nosuid&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>109</span><span class=cl>      <span class=p>],</span>
+</span></span><span class=line><span class=ln>110</span><span class=cl>    }<span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>111</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>112</span><span class=cl><span class=c1>    # CCE-90845-9 - Ensure /tmp Located On Separate Partition
+</span></span></span><span class=line><span class=ln>113</span><span class=cl><span class=c1>    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_tmp
+</span></span></span><span class=line><span class=ln>114</span><span class=cl>    {
+</span></span><span class=line><span class=ln>115</span><span class=cl>      <span class=k>mountpoint</span> <span class=err>:</span> <span class=s2>&#34;/tmp&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>116</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;tmp&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>117</span><span class=cl>      <span class=k>size</span> <span class=err>:</span> <span class=s2>&#34;2048&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>118</span><span class=cl>      <span class=k>fstype</span> <span class=err>:</span> <span class=s2>&#34;xfs&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>119</span><span class=cl>      <span class=k>grow</span> <span class=err>:</span> <span class=kt>false</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>120</span><span class=cl>      <span class=k>fsoptions</span> <span class=err>:</span> <span class=p>[</span><span class=c1>
+</span></span></span><span class=line><span class=ln>121</span><span class=cl><span class=c1>        # CCE-83869-8 - Add nodev Option to /tmp
+</span></span></span><span class=line><span class=ln>122</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_tmp_nodev
+</span></span></span><span class=line><span class=ln>123</span><span class=cl>        <span class=s2>&#34;nodev&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>124</span><span class=cl><span class=c1>        # CCE-83872-2 - Add nosuid Option to /tmp
+</span></span></span><span class=line><span class=ln>125</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_tmp_nosuid
+</span></span></span><span class=line><span class=ln>126</span><span class=cl>        <span class=s2>&#34;nosuid&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>127</span><span class=cl><span class=c1>        # CCE-83885-4 - Add noexec Option to /tmp
+</span></span></span><span class=line><span class=ln>128</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_tmp_noexec
+</span></span></span><span class=line><span class=ln>129</span><span class=cl>        <span class=s2>&#34;noexec&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>130</span><span class=cl>      <span class=p>],</span>
+</span></span><span class=line><span class=ln>131</span><span class=cl>    }<span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>132</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>133</span><span class=cl><span class=c1>    # CCE-83466-3 - Ensure /var Located On Separate Partition
+</span></span></span><span class=line><span class=ln>134</span><span class=cl><span class=c1>    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_var
+</span></span></span><span class=line><span class=ln>135</span><span class=cl>    {
+</span></span><span class=line><span class=ln>136</span><span class=cl>      <span class=k>mountpoint</span> <span class=err>:</span> <span class=s2>&#34;/var&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>137</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;var&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>138</span><span class=cl>      <span class=k>size</span> <span class=err>:</span> <span class=s2>&#34;2048&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>139</span><span class=cl>      <span class=k>fstype</span> <span class=err>:</span> <span class=s2>&#34;xfs&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>140</span><span class=cl>      <span class=k>grow</span> <span class=err>:</span> <span class=kt>false</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>141</span><span class=cl>      <span class=k>fsoptions</span> <span class=err>:</span> <span class=p>[</span><span class=c1>
+</span></span></span><span class=line><span class=ln>142</span><span class=cl><span class=c1>        # CCE-83868-0 - Add nodev Option to /var
+</span></span></span><span class=line><span class=ln>143</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_nodev
+</span></span></span><span class=line><span class=ln>144</span><span class=cl>        <span class=s2>&#34;nodev&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>145</span><span class=cl><span class=c1>        # CCE-83865-6 - Add noexec Option to /var
+</span></span></span><span class=line><span class=ln>146</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_noexec
+</span></span></span><span class=line><span class=ln>147</span><span class=cl>        <span class=s2>&#34;noexec&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>148</span><span class=cl><span class=c1>        # CCE-83867-2 - Add nosuid Option to /var
+</span></span></span><span class=line><span class=ln>149</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_nosuid
+</span></span></span><span class=line><span class=ln>150</span><span class=cl>        <span class=s2>&#34;nosuid&#34;</span>
+</span></span><span class=line><span class=ln>151</span><span class=cl>      <span class=p>],</span>
+</span></span><span class=line><span class=ln>152</span><span class=cl>    }<span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>153</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>154</span><span class=cl><span class=c1>    # CCE-90848-3 - Ensure /var/log Located On Separate Partition
+</span></span></span><span class=line><span class=ln>155</span><span class=cl><span class=c1>    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_var_log
+</span></span></span><span class=line><span class=ln>156</span><span class=cl>    {
+</span></span><span class=line><span class=ln>157</span><span class=cl>      <span class=k>mountpoint</span> <span class=err>:</span> <span class=s2>&#34;/var/log&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>158</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;log&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>159</span><span class=cl>      <span class=k>size</span> <span class=err>:</span> <span class=s2>&#34;4096&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>160</span><span class=cl>      <span class=k>fstype</span> <span class=err>:</span> <span class=s2>&#34;xfs&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>161</span><span class=cl>      <span class=k>grow</span> <span class=err>:</span> <span class=kt>false</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>162</span><span class=cl>      <span class=k>fsoptions</span> <span class=err>:</span> <span class=p>[</span><span class=c1>
+</span></span></span><span class=line><span class=ln>163</span><span class=cl><span class=c1>        # CCE-83886-2 - Add nodev Option to /var/log
+</span></span></span><span class=line><span class=ln>164</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_nodev
+</span></span></span><span class=line><span class=ln>165</span><span class=cl>        <span class=s2>&#34;nodev&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>166</span><span class=cl><span class=c1>        #  CCE-83887-0 - Add noexec Option to /var/log
+</span></span></span><span class=line><span class=ln>167</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_noexec
+</span></span></span><span class=line><span class=ln>168</span><span class=cl>        <span class=s2>&#34;noexec&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>169</span><span class=cl><span class=c1>        # CCE-83870-6 - Add nosuid Option to /var/log
+</span></span></span><span class=line><span class=ln>170</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_nosuid
+</span></span></span><span class=line><span class=ln>171</span><span class=cl>        <span class=s2>&#34;nosuid&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>172</span><span class=cl>      <span class=p>],</span>
+</span></span><span class=line><span class=ln>173</span><span class=cl>    }<span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>174</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>175</span><span class=cl><span class=c1>    # CCE-90847-5 - Ensure /var/log/audit Located On Separate Partition
+</span></span></span><span class=line><span class=ln>176</span><span class=cl><span class=c1>    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_var_log_audit
+</span></span></span><span class=line><span class=ln>177</span><span class=cl>    {
+</span></span><span class=line><span class=ln>178</span><span class=cl>      <span class=k>mountpoint</span> <span class=err>:</span> <span class=s2>&#34;/var/log/audit&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>179</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;audit&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>180</span><span class=cl>      <span class=k>size</span> <span class=err>:</span> <span class=s2>&#34;1024&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>181</span><span class=cl>      <span class=k>fstype</span> <span class=err>:</span> <span class=s2>&#34;xfs&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>182</span><span class=cl>      <span class=k>grow</span> <span class=err>:</span> <span class=kt>false</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>183</span><span class=cl>      <span class=k>fsoptions</span> <span class=err>:</span> <span class=p>[</span><span class=c1>
+</span></span></span><span class=line><span class=ln>184</span><span class=cl><span class=c1>        # CCE-83882-1 - Add nodev Option to /var/log/audit
+</span></span></span><span class=line><span class=ln>185</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_audit_nodev
+</span></span></span><span class=line><span class=ln>186</span><span class=cl>        <span class=s2>&#34;nodev&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>187</span><span class=cl><span class=c1>        # CCE-83878-9 - Add noexec Option to /var/log/audit
+</span></span></span><span class=line><span class=ln>188</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_audit_noexec
+</span></span></span><span class=line><span class=ln>189</span><span class=cl>        <span class=s2>&#34;noexec&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>190</span><span class=cl><span class=c1>        # CCE-83893-8 - Add nosuid Option to /var/log/audit
+</span></span></span><span class=line><span class=ln>191</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_log_audit_nosuid
+</span></span></span><span class=line><span class=ln>192</span><span class=cl>        <span class=s2>&#34;nosuid&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>193</span><span class=cl>      <span class=p>],</span>
+</span></span><span class=line><span class=ln>194</span><span class=cl>    }<span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>195</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>196</span><span class=cl><span class=c1>    # CCE-83487-9 - Ensure /var/tmp Located On Separate Partition
+</span></span></span><span class=line><span class=ln>197</span><span class=cl><span class=c1>    # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_partition_for_var_tmp
+</span></span></span><span class=line><span class=ln>198</span><span class=cl>    {
+</span></span><span class=line><span class=ln>199</span><span class=cl>      <span class=k>mountpoint</span> <span class=err>:</span> <span class=s2>&#34;/var/tmp&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>200</span><span class=cl>      <span class=k>name</span> <span class=err>:</span> <span class=s2>&#34;vartmp&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>201</span><span class=cl>      <span class=k>size</span> <span class=err>:</span> <span class=s2>&#34;2048&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>202</span><span class=cl>      <span class=k>fstype</span> <span class=err>:</span> <span class=s2>&#34;xfs&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>203</span><span class=cl>      <span class=k>grow</span> <span class=err>:</span> <span class=kt>false</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>204</span><span class=cl>      <span class=k>fsoptions</span> <span class=err>:</span> <span class=p>[</span><span class=c1>
+</span></span></span><span class=line><span class=ln>205</span><span class=cl><span class=c1>        # CCE-83864-9 - Add nodev Option to /var/tmp
+</span></span></span><span class=line><span class=ln>206</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_tmp_nodev
+</span></span></span><span class=line><span class=ln>207</span><span class=cl>        <span class=s2>&#34;nodev&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>208</span><span class=cl><span class=c1>        # CCE-83866-4 - Add noexec Option to /var/tmp
+</span></span></span><span class=line><span class=ln>209</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_tmp_noexec
+</span></span></span><span class=line><span class=ln>210</span><span class=cl>        <span class=s2>&#34;noexec&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>211</span><span class=cl><span class=c1>        # CCE-83863-1 - Add nosuid Option to /var/tmp
+</span></span></span><span class=line><span class=ln>212</span><span class=cl><span class=c1>        # Ref: https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_mount_option_var_tmp_nosuid
+</span></span></span><span class=line><span class=ln>213</span><span class=cl>        <span class=s2>&#34;nosuid&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>214</span><span class=cl>      <span class=p>],</span>
+</span></span><span class=line><span class=ln>215</span><span class=cl>    }<span class=p>,</span>
+</span></span><span class=line><span class=ln>216</span><span class=cl>  <span class=p>]</span>
+</span></span><span class=line><span class=ln>217</span><span class=cl>}
+</span></span><span class=line><span class=ln>218</span><span class=cl>
+</span></span><span class=line><span class=ln>219</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;install_packages&#34;</span> {
+</span></span><span class=line><span class=ln>220</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>list</span><span class=p>(</span><span class=k>string</span><span class=p>)</span>
+</span></span><span class=line><span class=ln>221</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;Packages list ensure to be installed&#34;</span>
+</span></span><span class=line><span class=ln>222</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=p>[</span>
+</span></span><span class=line><span class=ln>223</span><span class=cl>    <span class=s2>&#34;bash-completion&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>224</span><span class=cl>    <span class=s2>&#34;tar&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>225</span><span class=cl>    <span class=s2>&#34;vim&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>226</span><span class=cl>    <span class=s2>&#34;htop&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>227</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>228</span><span class=cl><span class=c1>    # VMware tools and dependencies
+</span></span></span><span class=line><span class=ln>229</span><span class=cl>    <span class=s2>&#34;open-vm-tools&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>230</span><span class=cl>    <span class=s2>&#34;perl&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>231</span><span class=cl><span class=c1>    
+</span></span></span><span class=line><span class=ln>232</span><span class=cl><span class=c1>    # CCE-90843-4 Install AIDE https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_aide_installed
+</span></span></span><span class=line><span class=ln>233</span><span class=cl>    <span class=s2>&#34;aide&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>234</span><span class=cl><span class=c1>    # CCE-83523-1 Install sudo Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_sudo_installed
+</span></span></span><span class=line><span class=ln>235</span><span class=cl>    <span class=s2>&#34;sudo&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>236</span><span class=cl><span class=c1>    # CCE-83649-4 Ensure the audit Subsystem is Installed https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_audit_installed
+</span></span></span><span class=line><span class=ln>237</span><span class=cl>    <span class=s2>&#34;audit&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>238</span><span class=cl><span class=c1>    # CCE-84063-7 Ensure rsyslog is Installed https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_rsyslog_installed
+</span></span></span><span class=line><span class=ln>239</span><span class=cl>    <span class=s2>&#34;rsyslog&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>240</span><span class=cl><span class=c1>    # CCE-84021-5 Install firewalld Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_firewalld_installed
+</span></span></span><span class=line><span class=ln>241</span><span class=cl>    <span class=s2>&#34;firewalld&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>242</span><span class=cl><span class=c1>    # CCE-84069-4 Install libselinux Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_libselinux_installed
+</span></span></span><span class=line><span class=ln>243</span><span class=cl>    <span class=s2>&#34;libselinux&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>244</span><span class=cl>  <span class=p>]</span>
+</span></span><span class=line><span class=ln>245</span><span class=cl>}
+</span></span><span class=line><span class=ln>246</span><span class=cl>
+</span></span><span class=line><span class=ln>247</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;uninstall_packages&#34;</span> {
+</span></span><span class=line><span class=ln>248</span><span class=cl><span class=n>  type</span>        <span class=o>=</span> <span class=k>list</span><span class=p>(</span><span class=k>string</span><span class=p>)</span>
+</span></span><span class=line><span class=ln>249</span><span class=cl><span class=n>  description</span> <span class=o>=</span> <span class=s2>&#34;Packages list ensure to be uninstalled&#34;</span>
+</span></span><span class=line><span class=ln>250</span><span class=cl><span class=n>  default</span>     <span class=o>=</span> <span class=p>[</span><span class=c1>
+</span></span></span><span class=line><span class=ln>251</span><span class=cl><span class=c1>    # unnecessary firmware
+</span></span></span><span class=line><span class=ln>252</span><span class=cl>    <span class=s2>&#34;aic94xx-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>253</span><span class=cl>    <span class=s2>&#34;atmel-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>254</span><span class=cl>    <span class=s2>&#34;b43-openfwwf&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>255</span><span class=cl>    <span class=s2>&#34;bfa-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>256</span><span class=cl>    <span class=s2>&#34;ipw2100-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>257</span><span class=cl>    <span class=s2>&#34;ipw2200-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>258</span><span class=cl>    <span class=s2>&#34;ivtv-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>259</span><span class=cl>    <span class=s2>&#34;iwl*-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>260</span><span class=cl>    <span class=s2>&#34;libertas-usb8388-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>261</span><span class=cl>    <span class=s2>&#34;ql*-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>262</span><span class=cl>    <span class=s2>&#34;rt61pci-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>263</span><span class=cl>    <span class=s2>&#34;rt73usb-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>264</span><span class=cl>    <span class=s2>&#34;xorg-x11-drv-ati-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>265</span><span class=cl>    <span class=s2>&#34;zd1211-firmware&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>266</span><span class=cl>    <span class=s2>&#34;cockpit&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>267</span><span class=cl>    <span class=s2>&#34;alsa-*&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>268</span><span class=cl>    <span class=s2>&#34;fprintd-pam&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>269</span><span class=cl>    <span class=s2>&#34;intltool&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>270</span><span class=cl>    <span class=s2>&#34;microcode_ctl&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>271</span><span class=cl><span class=c1>
+</span></span></span><span class=line><span class=ln>272</span><span class=cl><span class=c1>    # CCE-84072-8 Uninstall mcstrans Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_mcstrans_removed
+</span></span></span><span class=line><span class=ln>273</span><span class=cl>    <span class=s2>&#34;mcstrans&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>274</span><span class=cl><span class=c1>    # CCE-84073-6 Uninstall setroubleshoot Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_setroubleshoot_removed
+</span></span></span><span class=line><span class=ln>275</span><span class=cl>    <span class=s2>&#34;setroubleshoot&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>276</span><span class=cl><span class=c1>    # CCE-84159-3 Uninstall vsftpd Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_vsftpd_removed
+</span></span></span><span class=line><span class=ln>277</span><span class=cl>    <span class=s2>&#34;vsftpd&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>278</span><span class=cl><span class=c1>    # CCE-85974-4 Uninstall httpd Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_httpd_removed
+</span></span></span><span class=line><span class=ln>279</span><span class=cl>    <span class=s2>&#34;httpd&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>280</span><span class=cl><span class=c1>    # CCE-85977-7 Uninstall dovecot Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_dovecot_removed
+</span></span></span><span class=line><span class=ln>281</span><span class=cl>    <span class=s2>&#34;dovecot&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>282</span><span class=cl><span class=c1>    # CCE-90831-9 Ensure LDAP client is not installed https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_openldap-clients_removed
+</span></span></span><span class=line><span class=ln>283</span><span class=cl>    <span class=s2>&#34;openldap-clients&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>284</span><span class=cl><span class=c1>    # CCE-84155-1 Uninstall xinetd Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_xinetd_removed
+</span></span></span><span class=line><span class=ln>285</span><span class=cl>    <span class=s2>&#34;xinetd&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>286</span><span class=cl><span class=c1>    # CCE-84151-0 Remove NIS Client https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_ypbind_removed
+</span></span></span><span class=line><span class=ln>287</span><span class=cl>    <span class=s2>&#34;ypbind&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>288</span><span class=cl><span class=c1>    # CCE-84152-8 Uninstall ypserv Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_ypserv_removed
+</span></span></span><span class=line><span class=ln>289</span><span class=cl>    <span class=s2>&#34;ypserv&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>290</span><span class=cl><span class=c1>    # CCE-84142-9 Uninstall rsh Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_rsh_removed
+</span></span></span><span class=line><span class=ln>291</span><span class=cl>    <span class=s2>&#34;rsh&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>292</span><span class=cl><span class=c1>    # CCE-84157-7 Uninstall talk Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_talk_removed
+</span></span></span><span class=line><span class=ln>293</span><span class=cl>    <span class=s2>&#34;talk&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>294</span><span class=cl><span class=c1>    # CCE-84149-4 Uninstall telnet-server Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_telnet-server_removed
+</span></span></span><span class=line><span class=ln>295</span><span class=cl>    <span class=s2>&#34;telnet-server&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>296</span><span class=cl><span class=c1>    # CCE-84146-0 Remove telnet Clients https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_telnet_removed
+</span></span></span><span class=line><span class=ln>297</span><span class=cl>    <span class=s2>&#34;telnet&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>298</span><span class=cl><span class=c1>    # CCE-84154-4 Uninstall tftp-server Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_tftp-server_removed
+</span></span></span><span class=line><span class=ln>299</span><span class=cl>    <span class=s2>&#34;tftp-server&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>300</span><span class=cl><span class=c1>    # CCE-84153-6 Remove tftp Daemon https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_tftp_removed
+</span></span></span><span class=line><span class=ln>301</span><span class=cl>    <span class=s2>&#34;tftp&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>302</span><span class=cl><span class=c1>    # CCE-84238-5 Uninstall squid Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_squid_removed
+</span></span></span><span class=line><span class=ln>303</span><span class=cl>    <span class=s2>&#34;squid&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>304</span><span class=cl><span class=c1>    # CCE-85981-9 Uninstall net-snmp Package https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_net-snmp_removed
+</span></span></span><span class=line><span class=ln>305</span><span class=cl>    <span class=s2>&#34;net-snmp&#34;</span><span class=p>,</span><span class=c1>
+</span></span></span><span class=line><span class=ln>306</span><span class=cl><span class=c1>    # CCE-84104-9 Remove the X Windows Package Group https://static.open-scap.org/ssg-guides/ssg-rhel9-guide-cis.html#xccdf_org.ssgproject.content_rule_package_xorg-x11-server-common_removed
+</span></span></span><span class=line><span class=ln>307</span><span class=cl>    <span class=s2>&#34;xorg-x11-server-common&#34;</span><span class=p>,</span>
+</span></span><span class=line><span class=ln>308</span><span class=cl>  <span class=p>]</span>
+</span></span><span class=line><span class=ln>309</span><span class=cl>}
+</span></span><span class=line><span class=ln>310</span><span class=cl>
+</span></span><span class=line><span class=ln>311</span><span class=cl><span class=k>variable</span> <span class=s2>&#34;guest_timezone&#34;</span> {
+</span></span><span class=line><span class=ln>312</span><span class=cl><span class=n>  type</span>    <span class=o>=</span> <span class=k>string</span>
+</span></span><span class=line><span class=ln>313</span><span class=cl><span class=n>  default</span> <span class=o>=</span> <span class=s2>&#34;UTC&#34;</span>
+</span></span><span class=line><span class=ln>314</span><span class=cl>}</span></span></code></pre></div></div></div><h2 id=running-the-build>Running the Build</h2><p>To start the build, you only need to pass the value of the <code>provisioner_password</code> variable:</p><div class=window><div class=titlebar><div class=buttons><div class=bclose><a class=closebutton href=#><span><strong>x</strong></span></a></div><div class=minimize><a class=minimizebutton href=#><span><strong>&ndash;</strong></span></a></div><div class=zoom><a class=zoombutton href=#><span><strong>+</strong></span></a></div></div>ztsv@mac: ~/src/github.com/zt-sv/packer-templates</div><div class=terminal><ul><li></li><li>$&nbsp;packer&nbsp;build&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;-var&nbsp;"provisioner_password=REPLACE_ME"&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;rocky</li><li></li></ul></div></div><p>This command will read all <code>*.hcl</code> files in the <code>rocky</code> directory and merge them into a single configuration.</p><p>After successful execution, the <code>artifacts</code> directory will contain the built Rocky 9.7 virtual machine image in <code>ova</code> format, which can be imported into VMware Cloud Director or launched in any other VMware hypervisor.</p><p>If you need to build a different version of Rocky Linux, simply change the value of the <code>rocky_version</code> variable and, if necessary, the <code>vmware_guest_os_type</code>. Example for Rocky 8.10:</p><div class=window><div class=titlebar><div class=buttons><div class=bclose><a class=closebutton href=#><span><strong>x</strong></span></a></div><div class=minimize><a class=minimizebutton href=#><span><strong>&ndash;</strong></span></a></div><div class=zoom><a class=zoombutton href=#><span><strong>+</strong></span></a></div></div>ztsv@mac: ~/src/github.com/zt-sv/packer-templates</div><div class=terminal><ul><li></li><li>$&nbsp;packer&nbsp;build&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;-var&nbsp;"provisioner_password=REPLACE_ME"&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;-var&nbsp;"rocky_version=8.10"&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;-var&nbsp;"vmware_guest_os_type=rhel8_64Guest"&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;rocky</li><li></li></ul></div></div><p>Older versions of Rocky are moved to the archive, so if we need to build, for example, Rocky 9.4, we also need to pass the archive repository address to the <code>rocky_repository_url</code> variable:</p><div class=window><div class=titlebar><div class=buttons><div class=bclose><a class=closebutton href=#><span><strong>x</strong></span></a></div><div class=minimize><a class=minimizebutton href=#><span><strong>&ndash;</strong></span></a></div><div class=zoom><a class=zoombutton href=#><span><strong>+</strong></span></a></div></div>ztsv@mac: ~/src/github.com/zt-sv/packer-templates</div><div class=terminal><ul><li></li><li>$&nbsp;packer&nbsp;build&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;-var&nbsp;"provisioner_password=REPLACE_ME"&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;-var&nbsp;"rocky_version=9.4"&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;-var&nbsp;"rocky_repository_url=https://dl.rockylinux.org/vault/rocky"&nbsp;\</li><li>&nbsp;&nbsp;&nbsp;&nbsp;rocky</li><li></li></ul></div></div><p>The full source code for this example is available in the <a href=https://github.com/zt-sv/packer-templates>repository</a>.</p><h1 id=whats-next>What&rsquo;s Next?</h1><p>This example allows building various versions of Rocky Linux and ensuring their compliance with the CIS Benchmark.
+If a new version of the CIS Benchmark or a new version of Rocky Linux is released, you will not have to rebuild the template from scratch. It will be enough to make changes to the template code and run Packer again.</p><p>Building upon this foundation, you can:</p><ul><li>Build images for other hypervisors;</li><li>Perform subsequent packaging of templates into Vagrant Boxes;</li><li>Scale the approach to other operating systems;</li><li>Add various software to the template via Ansible.</li></ul></div></article></main></div><footer class=footer><span class=footer_item></span>&nbsp;<div class=footer_social-icons><a href=https://github.com/zt-sv target=_blank rel="noopener noreferrer me" title=Github><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg>
+</a><a href=/index.xml target=_blank rel="noopener noreferrer me" title=RSS><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 019 9"/><path d="M4 4a16 16 0 0116 16"/><circle cx="5" cy="19" r="1"/></svg></a></div><small class=footer_copyright>© 2026 Aleksandr Zaytsev.
+Powered by <a href=https://github.com/hugo-sid/hugo-blog-awesome target=_blank rel=noopener>Hugo blog awesome</a>.</small></footer><script src=https://zt.sv/js/main.min.4ee188e1744c19816e95a540b2650ed9f033ea0371e74eac8e717355cfca8741.js integrity="sha256-TuGI4XRMGYFulaVAsmUO2fAz6gNx506sjnFzVc/Kh0E="></script></body></html>
