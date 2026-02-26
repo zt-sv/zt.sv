@@ -125,3 +125,7 @@ html.dark .lang-list {
     color: rgb(186, 189, 196);
     font-size: inherit;
 }
+
+.highlight .line.hl {
+    background-color: rgba(39, 99, 113, 0.43);
+}
