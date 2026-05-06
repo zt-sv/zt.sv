@@ -883,7 +883,7 @@ $ packer build \
 
 The full source code for this example is available in the [repository](https://github.com/zt-sv/packer-templates).
 
-# What's Next?
+## What's Next?
 
 This example allows building various versions of Rocky Linux and ensuring their compliance with the CIS Benchmark.
 If a new version of the CIS Benchmark or a new version of Rocky Linux is released, you will not have to rebuild the template from scratch. It will be enough to make changes to the template code and run Packer again.
