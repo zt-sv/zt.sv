@@ -33,7 +33,7 @@ GitHub Actions.
 This post serves both as a guide for those who want to build something similar as well as documentation for myself, so I
 won't get lost in my own configurations later.
 
-# Why Hugo + GitHub Pages?
+## Why Hugo + GitHub Pages?
 
 Before diving into the technical details, let's take a look at the tools.
 
@@ -54,7 +54,7 @@ The combination of these three tools gives me:
 - Versioning;
 - The ability to write posts in any text editor.
 
-# Step 1: Preparation
+## Step 1: Preparation
 
 ## What You'll Need
 
@@ -82,7 +82,7 @@ $ hugo version
 The command outputs the installed Hugo version. In my case:
 `hugo v0.153.2+extended+withdeploy darwin/amd64 BuildDate=2025-12-22T16:53:01Z VendorInfo=Homebrew`.
 
-# Step 2: Creating a Hugo Project
+## Step 2: Creating a Hugo Project
 
 Let's create a new project:
 
@@ -107,7 +107,7 @@ zt.sv
 └── themes     # Themes
 {{< /terminal >}}
 
-# Step 3: Configuration
+## Step 3: Configuration
 
 By default, `hugo new site` creates a single `hugo.toml` configuration file in the project root, which becomes
 inconvenient for larger projects. However, Hugo supports
@@ -141,7 +141,7 @@ directories for each one. This directory needs to be created manually:
 $ mkdir -p content/en
 {{< /terminal >}}
 
-# Step 4: Installing a Theme
+## Step 4: Installing a Theme
 
 There are many [themes](https://themes.gohugo.io/) available for Hugo, but I chose
 [hugo-blog-awesome](https://github.com/hugo-sid/hugo-blog-awesome) by Hugo Sid.
@@ -175,7 +175,7 @@ $ hugo server
 
 ![First run](posts/first/01.png)
 
-# Step 5: Theme Configuration
+## Step 5: Theme Configuration
 
 The `hugo-blog-awesome` theme supports various additional settings, such as social media icons and the default color
 scheme. Unfortunately, not all available parameters are well documented, but you can find an example site and its
@@ -229,7 +229,7 @@ assets/
     └── web-app-manifest-512x512.png
 ```
 
-# Step 6: Multi-language Support
+## Step 6: Multi-language Support
 
 As I mentioned earlier, I'm going to run this blog in two languages simultaneously: English and Russian. Therefore, I
 have to add a language selection feature.
@@ -264,7 +264,7 @@ After that, a language selector appears on the site:
 
 ![Language select](posts/first/02.png)
 
-# Step 7: Customization
+## Step 7: Customization
 
 Any theme can be fine-tuned with custom styles or overridden templates. For example, the language selector displays
 `languageCode`, which looked a bit weird to me, so I replaced it with `languageName`. To do this, it was enough to
@@ -313,7 +313,7 @@ After these changes, the site looks like this:
 
 ![Styled](posts/first/03.png)
 
-# Step 8: Menu and the "About Me" Page
+## Step 8: Menu and the "About Me" Page
 
 To add the main menu to the site, you need to create the file `config/_default/menu.yaml`. For now, I'll only add the
 "About" item to the main menu:
@@ -343,7 +343,7 @@ $ hugo new pages/about.md
 This command creates the file `pages/about.md` from the `archetypes/default.md` template in the default content
 directory (the `contentDir` parameter in `hugo.yaml`).
 
-# Step 9: Creating the Repository
+## Step 9: Creating the Repository
 
 Initialize a local Git repository:
 
@@ -380,7 +380,7 @@ $ git remote add origin git@github.com:zt-sv/zt.sv.git
 $ git push -u origin main
 {{< /terminal >}}
 
-# Step 10: Custom Domain
+## Step 10: Custom Domain
 
 Since I plan to use a custom domain for this site, I need to add a simple text file named `CNAME`:
 
@@ -407,7 +407,7 @@ the `gh-pages` branch as the source.
 
 ![GitHub custom domain setup](posts/first/07.png)
 
-# Step 11: GitHub Actions and Automatic Publishing
+## Step 11: GitHub Actions and Automatic Publishing
 
 For automatic build and deployment, I use GitHub Actions, so I create the file
 `.github/workflows/deploy.yml`:
@@ -472,7 +472,7 @@ $ git commit -m "Build and deploy Hugo site"
 $ git push
 {{< /terminal >}}
 
-# What's Next?
+## What's Next?
 
 Now you have:
 
